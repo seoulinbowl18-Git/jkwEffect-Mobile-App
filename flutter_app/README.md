@@ -87,7 +87,7 @@ Campaign: `active` ⇄ `paused` → `closed` (sisa budget dikembalikan ke saldo 
    tambahkan **SHA-1** debug (`cd android && ./gradlew signingReport`) dan SHA-1 release / Play App Signing.
 3. Unduh ulang `google-services.json` → ganti `android/app/google-services.json`
    (setelah SHA-1 ditambahkan, file berisi OAuth client Android `client_type: 1`).
-4. Backend: env var `FIREBASE_PROJECT_ID=ourbuzzer-951b4`.
+4. Backend: env var `FIREBASE_PROJECT_ID=jkweffect`.
 
 
 - Package Android: **`com.ourbuzzer.app`** (harus sama dengan yang didaftarkan di Firebase Console).
