@@ -1,0 +1,39 @@
+{
+  "summary": "First test of the Expo mobile companion app (Indonesian UI), using the web preview at 390x844 with the seeded tokens set in localStorage. Backend: 7/7 pytest pass (tests/test_mobile_api.py). Covered: seeded auth/me, sections, exclusive filter, the full brand-campaign -> submit -> dup/wrong-domain -> review -> claim -> verify -> pause/resume/close+refund flow, withdraw min 422, Komerce sandbox QRIS topup (200 with qr_string + payment_url) and notifications. Frontend: every requested flow PASSED end to end. Login screen renders. Creator Cari Cuan: balance pill, public/exclusive tabs (exclusive shows 1 campaign), search with empty state, category chips (Beauty=3), the 4 rows, all-count, streak banner. Campaign detail -> back -> submit: wrong-domain client error, valid tiktok submit redirects to /activity, duplicate shows 'Video ini sudah pernah didaftarkan'. Konten: 6 filter chips filter correctly. Dompet: balance shown; withdraw 10000 -> 'Minimal Rp 50.000'; 50000 -> toast, balance -50.000, history entry. Notifications: bell badge, list, badge cleared after visit. Profile: save persists after reload; logout returns to /login and clears the token. Brand: Beranda stats/balance; new campaign form disabled until valid, create deducts budget; action sheet pause -> Dijeda, resume -> Aktif, close confirm shows refund Rp 50.000 and the balance is refunded. Review: approve -> creator claim (estimate Rp 50.000) -> brand Cek views verify (prefilled 5000, 'Dibayar Rp 50.000') -> creator balance +50.000. Topup QRIS: QR rendered, 'Cek status' -> 'Pembayaran belum diterima', history in the Saldo tab. Issues found: a wrong label on the withdrawal status, a deprecated expo-router native-tabs import, small touch targets, a missing exclusive count, and auth that clears the token on any /auth/me error.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CreatorWallet withdrawal history", "issue": "A pending withdrawal (status 'diproses') shows the badge 'Dicek views', which is a submission label from STATUS in src/lib/format.ts. It should read e.g. 'Diproses' / 'Menunggu transfer'. 'disetujui' shows 'Selesai' and 'ditolak' shows 'Ditolak' (OK). The ternary at src/screens/CreatorWallet.tsx:72 is a no-op (w.status === 'diproses' ? 'diproses' : w.status). Use a withdrawal-specific label map.", "testID": "withdrawal-<id>", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Cari Cuan", "issues": ["Touch targets under 44pt: category chips 36px tall, bounty-tab-public/exclusive 38px, header-balance-pill 32px, campaign card Instruksi/Submit buttons 42px. The same Chips component is used in Konten, Review and new-campaign.", "The Public tab shows a count (11) but the Exclusive tab shows none, although sections.total_exclusive=1. This is inconsistent."]}
+    ],
+    "react_native_issues": [
+      {"component": "expo-router/unstable-native-tabs", "issue": "Deprecated import. The Metro and console logs warn '`expo-router/unstable-native-tabs` is deprecated. Use `expo-router/native-tabs` instead.' Reference: /app/frontend/app/(tabs)/_layout.tsx:4"}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_mobile_api.py", "/app/test_reports/pytest/pytest_mobile.xml"],
+  "action_items": [
+    "Fix the withdrawal status label: add a withdrawal-specific map (diproses -> 'Diproses', disetujui -> 'Berhasil', ditolak -> 'Ditolak') in src/screens/CreatorWallet.tsx:72 instead of reusing the submission STATUS ('Dicek views').",
+    "Migrate `import { NativeTabs } from 'expo-router/unstable-native-tabs'` to 'expo-router/native-tabs' in app/(tabs)/_layout.tsx.",
+    "AuthContext startup: `try { me() } catch { clear() }` wipes the stored session on ANY error, including offline (ApiError status 0) and 5xx. Only clear on 401 so a flaky network doesn't log users out (src/context/AuthContext.tsx ~line 79).",
+    "Raise Chips, bounty tabs, balance pill and card action buttons to a minimum height of 44.",
+    "Optional: show the exclusive count badge on bounty-tab-exclusive, as on the public tab."
+  ],
+  "critical_code_review_comments": [
+    "AuthContext clears the token on any /auth/me failure, not only 401 (see the action items).",
+    "CreatorWallet.tsx:72 has a redundant ternary and the wrong label source.",
+    "Backend /auth/session returns session_token both at top level and nested user. The mobile client strips both. OK.",
+    "server.py is 832 lines (>700). Consider splitting into routers (pre-existing; shared with the web app)."
+  ],
+  "updated_files": ["/app/backend/tests/test_mobile_api.py (new)"],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% of requested flows (1 label bug, design nits)"},
+  "seed_data_creation": "No new seed. All test data was cleaned up afterwards: TEST_ campaigns, submissions (including the one on demo campaign cmp_88f03c87d000, whose submission_count was decremented), the withdrawal, topups, ledger entries and notifications. Balances were reset (creator 120000/total_earned 120000, post_dates [], profile {}; brand 5000000). The test_session_creator session was re-upserted after the UI logout test, because Bearer logout deletes it.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Mobile Expo app: set localStorage 'session_token' to test_session_creator / test_session_brand, then goto origin + path (/, /activity, /wallet, /profile, /topup, /submit/<cid>). Unauthenticated root redirects to /login, so build URLs from the origin, not page.url. UI logout deletes the seeded session: re-upsert it in user_sessions afterwards. Tab testIDs: tab-index/activity/wallet/profile. Brand review filter default 'direview'; verify via review-filter-diproses. Run backend: EXPO_PUBLIC_BACKEND_URL=<url> pytest tests/test_mobile_api.py -n 0, then clean up (the script above deletes TEST_ campaigns etc.)."
+}

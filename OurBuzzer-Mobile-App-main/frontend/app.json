@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "TryBuzzer",
+    "slug": "trybuzzer-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "trybuzzer",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trybuzzer.mobile"
+    },
+    "android": {
+      "package": "com.trybuzzer.mobile",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FF5500",
+          "resizeMode": "contain"
+        }
+      ],
+      "@react-native-vector-icons/ionicons"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

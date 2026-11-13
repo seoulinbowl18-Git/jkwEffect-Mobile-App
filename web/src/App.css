@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+::selection { background: #ff5500; color: white; }
+
+.hero-gradient {
+  background:
+    radial-gradient(60% 70% at 20% 30%, rgba(255, 210, 170, 0.9), transparent 60%),
+    radial-gradient(50% 60% at 80% 20%, rgba(255, 235, 215, 0.9), transparent 60%),
+    radial-gradient(70% 80% at 50% 100%, #ff4d00, transparent 70%),
+    linear-gradient(180deg, #ffd8bd 0%, #ff8a3d 55%, #ff5500 100%);
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.animate-rise { animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }

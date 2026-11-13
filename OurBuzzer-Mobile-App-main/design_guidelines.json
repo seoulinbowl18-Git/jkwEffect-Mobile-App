@@ -1,0 +1,211 @@
+{
+  "project_overview": {
+    "app_name": "TryBuzzer (Buzzer.id)",
+    "description": "Pay-per-performance creator & clipping marketing platform in Indonesian language. Brands post campaigns with Rp per 1K views rate, min views, total budget, and rules. Creators submit video links (TikTok, IG Reels, Threads, YouTube Shorts), earn money based on views, build daily check-in streaks, and withdraw funds (min Rp 50.000) to bank/e-wallet accounts.",
+    "app_type": "hybrid_fullstack_saas_marketplace",
+    "language": "Indonesian UI (Bahasa Indonesia)"
+  },
+  "design_concepts_and_probabilities": [
+    {
+      "concept": "Indonesian Creator Glow & Kinetic Orange",
+      "probability": "88%",
+      "description": "High-contrast energetic warm orange (#FF5500) paired with slate obsidian (#0F172A) and clean sand white (#FAFAFC). Bold Indonesian typography, pill status chips, fiery daily streak counters, marquee payout ticker, and tactical data cards."
+    },
+    {
+      "concept": "Swiss Precision & Editorial Clipping",
+      "probability": "6%",
+      "description": "Monochromatic dark/light grey grid base with signal orange functional highlights, tight bento grid, and structured editorial typography."
+    },
+    {
+      "concept": "Neo-Brutalist Creator Market",
+      "probability": "4%",
+      "description": "Thick black borders, playful badge chips, high contrast drop shadows, and vibrant youth-focused gamification elements."
+    },
+    {
+      "concept": "Glassmorphic Creator Hub",
+      "probability": "1%",
+      "description": "Frosted glass panels, ambient glow backdrops, and floating 3D social media icons."
+    },
+    {
+      "concept": "Corporate Marketing SaaS",
+      "probability": "1%",
+      "description": "Standard corporate blue dashboard layout."
+    }
+  ],
+  "color_palette": {
+    "primary_orange": "#FF5500",
+    "primary_orange_hover": "#E04B00",
+    "primary_orange_light": "rgba(255, 85, 0, 0.1)",
+    "accent_green_emerald": "#10B981",
+    "accent_green_light": "rgba(16, 185, 129, 0.1)",
+    "dark_slate_anchor": "#0F172A",
+    "dark_slate_card": "#1E293B",
+    "light_bg_base": "#F8FAFC",
+    "light_card_bg": "#FFFFFF",
+    "border_light": "#E2E8F0",
+    "border_dark": "#334155",
+    "text_primary_light": "#0F172A",
+    "text_secondary_light": "#64748B",
+    "text_primary_dark": "#F8FAFC",
+    "text_secondary_dark": "#94A3B8"
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "body_font": "Plus Jakarta Sans, Inter, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "hierarchy": {
+      "h1_hero": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight",
+      "h2_section": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight",
+      "h3_card_header": "text-xl sm:text-2xl font-bold tracking-tight",
+      "body_text": "text-base font-normal leading-relaxed",
+      "caption_label": "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+      "rate_badge": "font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400"
+    }
+  },
+  "layout_and_spacing": {
+    "spacing_philosophy": "Generous Spacing (2-3x default Tailwind scale). Cards with borders must have internal padding p-6 or p-8.",
+    "container_max_width": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "bento_grid_marketing": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-6 lg:gap-8",
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6",
+    "image_mobile_constraint": "max-h-[70vh] object-cover rounded-2xl"
+  },
+  "image_urls": {
+    "hero_creators": [
+      {
+        "url": "https://images.unsplash.com/photo-1758273239210-59fea02475eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwzfHxpbmRvbmVzaWFuJTIwY29udGVudCUyMGNyZWF0b3IlMjB2aWRlb3xlbnwwfHx8fDE3OTM2ODEzNzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Young woman filming content with camera on tripod",
+        "category": "hero_creator"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1622107906469-632c870f19e9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHw0fHxpbmRvbmVzaWFuJTIwY29udGVudCUyMGNyZWF0b3IlMjB2aWRlb3xlbnwwfHx8fDE3OTM2ODEzNzZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Creator team holding video camera and clapboard",
+        "category": "hero_creator_2"
+      }
+    ],
+    "social_media_platforms": [
+      {
+        "url": "https://images.unsplash.com/photo-1642141325625-f76034e4ad2b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHw0fHx0aWt0b2slMjBpbnN0YWdyYW0lMjB2aWRlb3UyMGNyZWF0b3J8ZW58MHx8fHwxNzkzNjgxMzc2fDA&ixlib=rb-4.1.0&q=85",
+        "description": "TikTok platform screen",
+        "category": "tiktok_preview"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1724754608903-79368ccef14a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwyfHx0aWt0b2slMjBpbnN0YWdyYW0lMjB2aWRlb3UyMGNyZWF0b3J8ZW58MHx8fHwxNzkzNjgxMzc2fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Person scrolling Instagram Reels & TikTok feed on smartphone",
+        "category": "mobile_creator_feed"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1611926653458-09294b3142bf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w8NjA1NTJ8MHwxfHNlYXJjaHw0fHxicmFuZCUyMHZpcmFsJTIwc29jaWFsJTIwbWVkaWElMjBwcm9kdWN0fGVufDB8fHx8MTc5MzY4MTM3Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Social media apps grid on smartphone",
+        "category": "platform_icons_bg"
+      }
+    ],
+    "brand_products": [
+      {
+        "url": "https://images.unsplash.com/photo-1789954677001-713601a78ebc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w8NjA1NTJ8MHwxfHNlYXJjaHwzfHxicmFuZCUyMHZpcmFsJTIwc29jaWFsJTIwbWVkaWElMjBwcm9kdWN0fGVufDB8fHx8MTc5MzY4MTM3Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Skincare product billboard advertisement campaign",
+        "category": "beauty_brand_campaign"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1789996488962-839a1422ea5c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w8NjA1NTJ8MHwxfHNlYXJjaHwyfHxicmFuZCUyMHZpcmFsJTIwc29jaWFsJTIwbWVkaWElMjBwcm9kdWN0fGVufDB8fHx8MTc5MzY4MTM3Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Cosmetic jar product for UGC review campaign",
+        "category": "skincare_campaign_thumbnail"
+      }
+    ]
+  },
+  "key_pages_and_components": {
+    "landing_page": {
+      "path": "/",
+      "header": "Sticky navigation bar with TryBuzzer brand logo, nav links (Cari Campaign, Untuk Brand, Cara Kerja, FAQ), 'Saya Brand / Saya Kreator' role switch toggle, CTA 'Mulai Sekarang' (triggers Google Auth modal) and 'Gabung Discord' button.",
+      "hero_section": "High-impact vibrant orange gradient backdrop container (#FF5500), prominent headline 'Digaji bikin konten dari manapun.', subtitle 'Dapatkan penghasilan dari setiap 1.000 views di TikTok, Instagram Reels, Threads, & YouTube Shorts.', dual CTA buttons, live stats counter (800K+ Kreator, 10B+ Total Views, Rp 4.5M+ Total Payouts).",
+      "marquee_payouts": "Infinite horizontal scrolling ticker ribbon showing real-time payouts (e.g., '@dimas_clipping baru saja withdraw Rp 450.000 via Dana • 1 menit yang lalu').",
+      "featured_campaigns_preview": "Horizontal scrolling preview of top trending campaigns ('Lagi rame minggu ini') with big rank numbers 1, 2, 3.",
+      "how_it_works": "Interactive 3-step toggle for Creators (1. Pilih Campaign -> 2. Upload Konten -> 3. Tarik Cuan) and Brands (1. Buat Campaign -> 2. Set Rate Rp/1K Views -> 3. Dapat Ribuan Views).",
+      "earnings_calculator": "Interactive widget where creators slide estimated views (e.g. 100K views) and select platform to see estimated income in Rp (e.g. Rp 300.000).",
+      "faq_accordion": "Accordion answering common questions (Cara daftar, Minimal penarikan Rp 50.000, Durasi review video, Anti-fraud system)."
+    },
+    "role_selection_and_auth": {
+      "google_login_modal": "Simulated Google Sign-In button with avatar preview.",
+      "role_choice": "Modal or onboarding step to pick primary role: 'Kreator (Saya Mau Cari Cuan)' vs 'Brand (Saya Mau Buat Campaign)' vs 'Admin Panel'."
+    },
+    "creator_dashboard": {
+      "path": "/creator/dashboard",
+      "stat_cards": [
+        {"title": "Saldo Tersedia", "key": "saldo_tersedia", "format": "Rp X.XXX.XXX", "action": "Button 'Tarik Saldo' (Min Rp 50.000)"},
+        {"title": "Total Penghasilan", "key": "total_penghasilan", "format": "Rp X.XXX.XXX"},
+        {"title": "Estimasi Pending", "key": "estimasi_pending", "format": "Rp X.XXX.XXX"},
+        {"title": "Video Terdaftar", "key": "video_terdaftar", "format": "X Video"}
+      ],
+      "streak_banner": "Orange fiery streak widget ('7-Day Creator Streak'). Displays days 1 to 7 check-in status with bonus multiplier badge (e.g. 'Streaking 4 Hari! +10% Bonus Payout').",
+      "navigation_tabs": ["Submission", "Saldo & Penarikan", "Profil & Rekening"],
+      "status_filter_chips": ["Semua", "Siap diklaim", "Direview", "Menunggu views", "Diproses", "Disetujui", "Ditolak", "Selesai"],
+      "campaign_browse_tab": {
+        "title": "Cari Cuan (Browse Campaigns)",
+        "subtabs": ["Public", "Exclusive"],
+        "search_and_filters": "Search input + Category pills (Semua, Beauty, Gaming, Tech, Fashion, Kuliner, Edukasi, Finance).",
+        "row_sections": [
+          "Lagi rame minggu ini (Featured horizontal slider with large 01, 02, 03 rank badges)",
+          "Rate tertinggi (Sorted by highest CPM Rp per 1K views)",
+          "Campaign baru",
+          "Semua campaign"
+        ],
+        "campaign_card_props": {
+          "thumbnail": "Image URL",
+          "brand_logo": "Brand icon",
+          "category_badge": "Category label",
+          "platform_icons": ["TikTok", "Instagram", "Threads", "YouTube"],
+          "rate_badge": "Rp 3.000 /1K views",
+          "title": "String",
+          "min_views": "Limit min views (e.g. Min 5.000 views)",
+          "budget_progress": "Progress bar (e.g. Rp 12.500.000 / Rp 20.000.000)",
+          "action": "Button 'Lihat Detail & Submit'"
+        }
+      },
+      "campaign_modal": "Shows video brief, copyable rules, prohibited topics, sample content links, hashtags, caption requirements, and video URL submission input.",
+      "submit_video_modal": "Form to input video link, select platform (TikTok/Reel/Short), instant format validation, submit button.",
+      "saldo_withdraw_tab": {
+        "balance_summary": "Saldo saat ini, minimal withdrawal threshold warning if < Rp 50.000.",
+        "withdraw_form": "Select payment destination (Bank BCA, Mandiri, BRI, BNI, DANA, GoPay, OVO), account number, account holder name, withdraw amount (min Rp 50.000).",
+        "withdrawal_history_table": "Date, Amount, Destination, Status badge (Diproses, Disetujui, Ditolak), Transaction Proof ID."
+      }
+    },
+    "brand_dashboard": {
+      "path": "/brand/dashboard",
+      "header_actions": "Button 'Buat Campaign Baru', Button 'Top Up Saldo Budget'.",
+      "campaign_creation_modal": "Form fields: Title, Category, Platform checkboxes, Rate per 1K views (Rp), Minimum views threshold, Total campaign budget (Rp), Brief & Rules text area, Sample video links, Campaign banner upload.",
+      "brand_campaigns_list": "Table/Cards showing active campaigns, budget spent, total video submissions, total views generated.",
+      "submission_review_queue": "Review creator submissions: Watch video link, verify views count, approve or reject with feedback, view calculated payout."
+    },
+    "admin_panel": {
+      "path": "/admin",
+      "stats_overview": "Total Users (Creators/Brands), Total System Views, Total Payouts Disbursed (Rp), Active Campaigns.",
+      "tabs": ["Verifikasi Submission", "Persetujuan Withdraw", "Kelola Campaign", "Kelola User"],
+      "verification_actions": "Input/Override verified view counts, bulk approve submissions, trigger balance increment to creator wallet.",
+      "withdrawal_approval": "Approve Rp 50.000+ requests, upload/paste transfer proof reference ID."
+    },
+    "notifications_system": {
+      "bell_trigger": "Header notification bell icon with unread indicator badge.",
+      "dropdown_panel": "List of recent events (e.g. 'Submission disetujui +Rp 75.000', 'Penarikan Rp 100.000 via DANA berhasil', 'Campaign baru Somethinc rilis')."
+    }
+  },
+  "component_guidelines": {
+    "file_extension": ".js and .jsx files (Do NOT use .tsx files)",
+    "test_id_rules": "MUST include data-testid attribute on all interactive elements (buttons, inputs, tabs, filter chips, cards, modals, table rows). Standard format: kebab-case role-based (e.g. data-testid=\"submit-video-button\", data-testid=\"withdraw-modal-trigger\", data-testid=\"campaign-card-1\").",
+    "shadcn_customization": "Customized Radix UI primitives with warm orange (#FF5500) accents, heavy rounded borders (rounded-xl / rounded-2xl), and dark mode compatibility.",
+    "toast_notifications": "Use Sonner toast component located in src/components/ui/sonner.js for instant user feedback (e.g., 'Video link berhasil disubmit!', 'Permintaan penarikan Rp 100.000 diproses')."
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as background gradients.",
+    "Don't make generic centered layouts or simplistic uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky header and modals.",
+    "You MUST NOT apply universal transition (transition: all). Always specify exact properties like transition-colors or transition-transform.",
+    "You MUST NOT center align the app container (.App { text-align: center; }).",
+    "Always use modern button styles (pill-shaped or crisp sharp borders with scale-95 active press animations).",
+    "NEVER use generic AI assistant Emoji characters like 🤖, 🧠, 💭, 💡, 🔮, 🎯 for UI icons. Use Lucide icons (lucide-react) or custom SVG icons.",
+    "Every interaction needs micro-animations: hover states, click scales, badge pulses, and smooth entrance transitions.",
+    "Use 2-3x more spacing than default. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, selection states, and custom loading skeletons separate good from extraordinary.",
+    "All interactive elements MUST include data-testid attributes for robust automated testing."
+  ]
+}
