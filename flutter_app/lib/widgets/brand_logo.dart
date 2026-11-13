@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logo PAGI: huruf "b" dengan tombol putar di lengkungnya (kreator video).
+/// Logo PAGI: huruf "P" dengan tombol putar di lengkungnya (kreator video).
 /// [onDark] = versi putih di atas header gradasi merah.
 class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 40, this.showName = false, this.onDark = false});
@@ -62,14 +62,14 @@ class _MarkPainter extends CustomPainter {
     final w = s.width, h = s.height;
     final stroke = w * 0.19;
     final fill = Paint()..color = color;
-    final center = Offset(w * 0.56, h * 0.6);
-    final r = w * 0.3;
-    // Batang "b".
+    final center = Offset(w * 0.53, h * 0.375);
+    final r = w * 0.275;
+    // Batang "P" (tinggi penuh).
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.07, h * 0.02, stroke, center.dy - h * 0.02), Radius.circular(stroke / 2)),
+      RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.10, h * 0.04, stroke, h * 0.92), Radius.circular(stroke / 2)),
       fill,
     );
-    // Lengkung "b".
+    // Lengkung "P".
     canvas.drawCircle(
       center,
       r,

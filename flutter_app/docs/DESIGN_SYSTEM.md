@@ -48,7 +48,7 @@ radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
 |---|---|---|
 | `AppHeader` (`tall`, `subtitle`, `actions`) | `lib/widgets/app_header.dart` | AppBar gradasi + gelombang, semua halaman |
 | `GradientPanel`, `BrandWavePainter` | `lib/widgets/app_header.dart` | Header kustom & ornamen kartu hero |
-| `BrandLogo` | `lib/widgets/brand_logo.dart` | Logo "b" + play, putih di atas gradasi |
+| `BrandLogo` | `lib/widgets/brand_logo.dart` | Logo "P" + play, putih di atas gradasi |
 | `UserAvatar` (`ring`, `badge`) | `lib/widgets/user_avatar.dart` | Avatar foto/inisial di header & kartu |
 | `GradientButton` | `lib/widgets/premium.dart` | Aksi utama: gradasi merah, ikon + label, panah |
 | `OutlineActionButton` | `lib/widgets/premium.dart` | Aksi kedua: putih, garis merah, panah |
