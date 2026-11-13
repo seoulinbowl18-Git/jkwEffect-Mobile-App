@@ -7,10 +7,10 @@ Memakai **backend FastAPI yang sama** dengan versi web & Expo (`../backend/serve
 
 ```bash
 flutter pub get
-flutter run --dart-define=BACKEND_URL=https://<host-backend>
+flutter run --dart-define=BACKEND_URL=https://jkweffect-mobile-app-production.up.railway.app
 ```
 
-`BACKEND_URL` default: `http://10.0.2.2:8001` (backend lokal dari emulator Android; http hanya diizinkan di build debug).
+`BACKEND_URL` default: build release → `https://jkweffect-mobile-app-production.up.railway.app` (backend produksi jkwEffect); build debug → `http://10.0.2.2:8001` (backend lokal dari emulator Android; http hanya diizinkan di build debug).
 
 Test & lint:
 

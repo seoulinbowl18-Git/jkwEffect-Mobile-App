@@ -286,7 +286,7 @@ def test_google_login_keeps_custom_avatar(env):
     ("api.ourbuzzer.test", "https://api.ourbuzzer.test"),
     ("https://api.ourbuzzer.test/api", "https://api.ourbuzzer.test"),
     ("[https://api.ourbuzzer.test](https://api.ourbuzzer.test)", "https://api.ourbuzzer.test"),
-    ("ourbuzzer-mobile-app-production.up.railway.app", "https://ourbuzzer-mobile-app-production.up.railway.app"),
+    ("jkweffect-mobile-app-production.up.railway.app", "https://jkweffect-mobile-app-production.up.railway.app"),
     ("", ""), ("localhost", ""), ("https://", ""), ("not a url", ""),
 ])
 def test_clean_base_url(raw, expected):
@@ -303,7 +303,7 @@ def test_callback_url_survives_messy_public_base_url(env, monkeypatch):
 def test_callback_url_falls_back_to_railway_domain(env, monkeypatch):
     c, fake = env
     monkeypatch.setenv("PUBLIC_BASE_URL", "BASE URL")  # unusable
-    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "ourbuzzer-mobile-app-production.up.railway.app")
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "jkweffect-mobile-app-production.up.railway.app")
     create_qris(c)
     assert fake.calls[-1][2]["callback_url"] == \
-        "https://ourbuzzer-mobile-app-production.up.railway.app/api/payments/komerce/callback"
+        "https://jkweffect-mobile-app-production.up.railway.app/api/payments/komerce/callback"

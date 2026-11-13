@@ -8,10 +8,13 @@ class AppConfig {
   AppConfig._();
 
   /// Base URL backend FastAPI (tanpa `/api` di belakang).
-  static const String backendUrl = String.fromEnvironment(
-    'BACKEND_URL',
-    defaultValue: 'http://10.0.2.2:8001', // localhost dari emulator Android
-  );
+  /// Tanpa `--dart-define=BACKEND_URL`: build release memakai backend produksi jkwEffect,
+  /// build debug memakai backend lokal dari emulator Android.
+  static const String productionBackendUrl = 'https://jkweffect-mobile-app-production.up.railway.app';
+  static const String _definedBackendUrl = String.fromEnvironment('BACKEND_URL');
+  static const String backendUrl = _definedBackendUrl != ''
+      ? _definedBackendUrl
+      : (bool.fromEnvironment('dart.vm.product') ? productionBackendUrl : 'http://10.0.2.2:8001');
 
   /// Semua endpoint backend berada di bawah prefix `/api`.
   static String get apiBase => '$backendUrl/api';
