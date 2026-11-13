@@ -49,7 +49,7 @@ class SocialAccounts {
       );
 }
 
-/// Respons `GET /public/community`: link grup & bot Telegram jkwEffect.
+/// Respons `GET /public/community`: link grup & bot Telegram PAGI.
 class CommunityLinks {
   const CommunityLinks({this.telegramUrl = '', this.telegramBot = '', this.connectEnabled = false});
   final String telegramUrl;

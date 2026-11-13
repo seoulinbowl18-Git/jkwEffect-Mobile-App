@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logo jkwEffect: huruf "b" dengan tombol putar di lengkungnya (kreator video).
+/// Logo PAGI: huruf "b" dengan tombol putar di lengkungnya (kreator video).
 /// [onDark] = versi putih di atas header gradasi merah.
 class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 40, this.showName = false, this.onDark = false});
@@ -22,14 +22,31 @@ class BrandLogo extends StatelessWidget {
       children: [
         mark,
         SizedBox(width: size * 0.28),
-        Text(
-          'jkwEffect',
-          style: TextStyle(
-            color: onDark ? cs.onPrimary : null,
-            fontWeight: FontWeight.w800,
-            fontSize: size * 0.72, // design-ok: logo proporsional
-            letterSpacing: -0.5,
-          ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'PAGI',
+              style: TextStyle(
+                color: onDark ? cs.onPrimary : null,
+                fontWeight: FontWeight.w800,
+                fontSize: size * 0.6, // design-ok: logo proporsional
+                letterSpacing: -0.5,
+                height: 1,
+              ),
+            ),
+            SizedBox(height: size * 0.06),
+            Text(
+              'Pasukan Gibran Indonesia',
+              style: TextStyle(
+                color: onDark ? cs.onPrimary.withValues(alpha: 0.85) : cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                fontSize: (size * 0.3).clamp(10.0, 18.0), // design-ok: logo proporsional, min 10 agar terbaca
+                height: 1,
+              ),
+            ),
+          ],
         ),
       ],
     );

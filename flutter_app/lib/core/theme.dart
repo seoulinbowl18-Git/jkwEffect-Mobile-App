@@ -30,7 +30,7 @@ class AppRadius {
   static const double pill = 999;
 }
 
-/// Tema global jkwEffect — "Premium Red" (acuan: docs/DESIGN_SYSTEM.md).
+/// Tema global PAGI — "Premium Red" (acuan: docs/DESIGN_SYSTEM.md).
 /// Merah premium + kartu putih bersudut besar berbayangan lembut di atas latar abu-abu kebiruan.
 class AppTheme {
   AppTheme._();

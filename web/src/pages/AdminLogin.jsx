@@ -67,7 +67,7 @@ export default function AdminLogin() {
         <div className="rounded-[28px] bg-gradient-to-br from-[#A50021] via-[#C8102E] to-[#F21D43] p-7 text-white shadow-xl shadow-red-200">
           <ShieldCheck className="h-9 w-9" />
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight">Admin Pusat</h1>
-          <p className="mt-1 text-white/85">Masuk khusus Owner jkwEffect dengan kode OTP WhatsApp.</p>
+          <p className="mt-1 text-white/85">Masuk khusus Owner PAGI dengan kode OTP WhatsApp.</p>
         </div>
 
         <div className="-mt-4 rounded-3xl bg-white p-6 shadow-lg shadow-slate-200/60">

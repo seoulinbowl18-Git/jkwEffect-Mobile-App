@@ -1,4 +1,4 @@
-# jkwEffect Mobile (Flutter)
+# PAGI Mobile (Flutter)
 
 Aplikasi mobile Flutter untuk platform creator marketing bayar-per-views.
 Memakai **backend FastAPI yang sama** dengan versi web & Expo (`../backend/server.py`, prefix `/api`).
@@ -10,7 +10,7 @@ flutter pub get
 flutter run --dart-define=BACKEND_URL=https://jkweffect-mobile-app-production.up.railway.app
 ```
 
-`BACKEND_URL` default: build release → `https://jkweffect-mobile-app-production.up.railway.app` (backend produksi jkwEffect); build debug → `http://10.0.2.2:8001` (backend lokal dari emulator Android; http hanya diizinkan di build debug).
+`BACKEND_URL` default: build release → `https://jkweffect-mobile-app-production.up.railway.app` (backend produksi PAGI); build debug → `http://10.0.2.2:8001` (backend lokal dari emulator Android; http hanya diizinkan di build debug).
 
 Test & lint:
 

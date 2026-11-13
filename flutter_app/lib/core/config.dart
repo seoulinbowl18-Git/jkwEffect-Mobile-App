@@ -8,7 +8,7 @@ class AppConfig {
   AppConfig._();
 
   /// Base URL backend FastAPI (tanpa `/api` di belakang).
-  /// Tanpa `--dart-define=BACKEND_URL`: build release memakai backend produksi jkwEffect,
+  /// Tanpa `--dart-define=BACKEND_URL`: build release memakai backend produksi PAGI,
   /// build debug memakai backend lokal dari emulator Android.
   static const String productionBackendUrl = 'https://jkweffect-mobile-app-production.up.railway.app';
   static const String _definedBackendUrl = String.fromEnvironment('BACKEND_URL');
@@ -38,8 +38,8 @@ class AppConfig {
   }
 
   static const String brandContactMessage =
-      'Halo Admin jkwEffect, saya dari brand ... dan ingin daftar & konsultasi untuk membuat campaign '
-      'di jkwEffect. Mohon info lebih lanjut, terima kasih!';
+      'Halo Admin PAGI, saya dari brand ... dan ingin daftar & konsultasi untuk membuat campaign '
+      'di PAGI. Mohon info lebih lanjut, terima kasih!';
 
   /// `https://wa.me/<nomor>?text=<pesan>`, atau `null` bila nomor belum diatur.
   static Uri? whatsappUri([String message = brandContactMessage]) => whatsappUriFor(contactWhatsapp, message);

@@ -33,7 +33,7 @@ class BrandHomeView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppHeader(
-        title: const FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('jkwEffect')),
+        title: const FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('PAGI')),
         actions: const [BellButton()],
       ),
       body: RefreshIndicator(
@@ -138,7 +138,7 @@ class _StatsGrid extends StatelessWidget {
       row(4),
       const SizedBox(height: AppSpace.s),
       Text(
-        'Review konten & verifikasi views kreator ditangani Admin Pusat jkwEffect.',
+        'Review konten & verifikasi views kreator ditangani Admin Pusat PAGI.',
         key: const Key('brand-review-by-admin-note'),
         style: Theme.of(context).textTheme.bodySmall,
       ),

@@ -53,7 +53,7 @@ void main() {
     final uri = AppConfig.whatsappUriFor('0812-3456 7890')!;
     expect(uri.host, 'wa.me');
     expect(uri.path, '/6281234567890');
-    expect(uri.queryParameters['text'], startsWith('Halo Admin jkwEffect, saya dari brand'));
+    expect(uri.queryParameters['text'], startsWith('Halo Admin PAGI, saya dari brand'));
     expect(AppConfig.whatsappUriFor('+62 812 3456 7890')!.path, '/6281234567890');
     expect(AppConfig.whatsappUriFor(''), isNull);
   });

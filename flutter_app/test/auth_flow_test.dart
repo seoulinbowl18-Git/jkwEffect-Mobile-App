@@ -160,6 +160,6 @@ void main() {
     expect(bodies['verify'], {'phone': '081234567890', 'code': '123456'});
     expect(storage.value, 'tok_admin');
     expect(find.byKey(const Key('admin-phone-input')), findsNothing);
-    expect(find.text('jkwEffect Admin'), findsOneWidget);
+    expect(find.text('PAGI Admin'), findsOneWidget);
   });
 }
