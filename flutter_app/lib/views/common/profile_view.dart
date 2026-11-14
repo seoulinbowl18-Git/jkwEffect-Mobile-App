@@ -19,7 +19,7 @@ import '../creator/wallet_view.dart';
 import '../creator/withdraw_view.dart';
 import 'edit_profile_view.dart';
 
-/// Profil (Sleek Black): header + avatar, ringkasan akun & rekening, Tarik saldo /
+/// Profil (Premium Red): header + avatar, ringkasan akun & rekening, Tarik saldo /
 /// Top up, Riwayat, dan kartu menu akun. Dipakai kreator, brand, dan admin.
 class ProfileView extends ConsumerWidget {
   const ProfileView({super.key});

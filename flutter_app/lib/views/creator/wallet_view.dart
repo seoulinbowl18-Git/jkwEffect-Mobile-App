@@ -19,7 +19,7 @@ import '../home/home_shell.dart';
 import 'withdraw_view.dart';
 import 'withdrawal_history_view.dart';
 
-/// Dompet kreator (Sleek Black): header brand + avatar, kartu Saldo Aktif bergradasi,
+/// Dompet kreator (Premium Red): header brand + avatar, kartu Saldo Aktif bergradasi,
 /// tombol Tarik saldo, timeline Riwayat Penarikan, dan menu akun.
 class WalletView extends ConsumerWidget {
   const WalletView({super.key});
@@ -137,7 +137,7 @@ class WalletView extends ConsumerWidget {
   }
 }
 
-/// Kartu Saldo Aktif: gradasi hitam elegan, ornamen gelombang + grafik naik,
+/// Kartu Saldo Aktif: gradasi merah premium, ornamen gelombang + grafik naik,
 /// nominal besar (bisa disembunyikan), Total Pendapatan & Sedang dicek.
 class _BalanceCard extends StatefulWidget {
   const _BalanceCard({required this.stats});

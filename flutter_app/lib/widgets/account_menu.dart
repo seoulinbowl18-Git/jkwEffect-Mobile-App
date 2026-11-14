@@ -98,7 +98,7 @@ class AccountMenuCard extends ConsumerWidget {
   }
 }
 
-/// Baris menu baku: ikon di kotak abu muda + label + lencana opsional + panah.
+/// Baris menu baku: ikon di kotak soft pink + label + lencana opsional + panah.
 class MenuRow extends StatelessWidget {
   const MenuRow({
     super.key,

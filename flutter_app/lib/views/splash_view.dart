@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/brand_logo.dart';
 
-/// Layar tunggu saat sesi dimuat. Warnanya sama dengan native splash (Sleek Black #0A0A0A)
+/// Layar tunggu saat sesi dimuat. Warnanya sama dengan native splash (Premium Red #C8102E)
 /// supaya peralihan dari splash bawaan Android/iOS ke aplikasi tidak berkedip putih.
 class SplashView extends StatelessWidget {
   const SplashView({super.key});

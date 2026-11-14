@@ -19,7 +19,7 @@ class AppSpace {
   static const card = EdgeInsets.all(l);
 }
 
-/// Radius sudut seragam — Sleek Black: kontrol 14, kartu 24, header 32.
+/// Radius sudut seragam — Premium Red: kontrol 14, kartu 24, header 32.
 class AppRadius {
   AppRadius._();
   static const double s = 8;
@@ -30,23 +30,22 @@ class AppRadius {
   static const double pill = 999;
 }
 
-/// Tema global PAGI — "Sleek Black" (acuan: docs/DESIGN_SYSTEM.md).
-/// Hitam elegan monokrom + kartu putih bersudut besar berbayangan lembut di atas latar abu sangat muda.
-/// Merah hanya dipakai untuk [danger] (indikator error/peringatan).
+/// Tema global PAGI — "Premium Red" (acuan: docs/DESIGN_SYSTEM.md).
+/// Merah premium + kartu putih bersudut besar berbayangan lembut di atas latar abu-abu kebiruan.
 class AppTheme {
   AppTheme._();
 
-  // ---- Palet Sleek Black ----
-  static const primary = Color(0xFF121212); // Sleek Black: tombol, tab aktif, tautan, aksen
-  static const primaryDark = Color(0xFF0A0A0A); // Jet Black: awal gradasi
-  static const accent = Color(0xFF1E1E1E); // Charcoal: kilau gradasi tombol/kartu
-  static const softPink = Color(0xFFF0F0F0); // (nama lama) abu muda: latar ikon menu, pill tab aktif, badge
-  static const background = Color(0xFFFAFAFA);
+  // ---- Palet Premium Red ----
+  static const primary = Color(0xFFC8102E); // Primary Red: tombol, tab aktif, tautan, aksen
+  static const primaryDark = Color(0xFFA50021); // Deep Red: awal gradasi
+  static const accent = Color(0xFFF21D43); // Accent Red: kilau gradasi tombol/kartu
+  static const softPink = Color(0xFFFCE5EA); // latar ikon menu, pill tab aktif, badge
+  static const background = Color(0xFFF8F9FC);
   static const card = Color(0xFFFFFFFF);
-  static const textPrimary = Color(0xFF121212);
-  static const textSecondary = Color(0xFF737373);
-  static const border = Color(0xFFE5E5E5);
-  static const navInactive = Color(0xFF525252); // abu-abu gelap tab tidak aktif
+  static const textPrimary = Color(0xFF171B2B);
+  static const textSecondary = Color(0xFF777B86);
+  static const border = Color(0xFFE9E9EF);
+  static const navInactive = Color(0xFF5B5F6B); // abu-abu gelap tab tidak aktif
   static const onBrand = Color(0xFFFFFFFF);
 
   // ---- Warna merek platform (ikon akun sosial) ----
@@ -61,23 +60,23 @@ class AppTheme {
 
   /// Alias lama (dipakai komponen yang sudah ada).
   static const primaryLight = accent;
-  static const gradientEnd = Color(0xFF2A2A2A); // ujung gradasi header (abu gelap)
-  static const shadow = Color(0x12000000); // bayangan lembut kartu (~7%)
-  static const glow = Color(0x33000000); // bayangan gelap di bawah tombol/kartu hitam
+  static const gradientEnd = Color(0xFFF7A1B1); // ujung gradasi header (pink)
+  static const shadow = Color(0x12171B2B); // bayangan lembut kartu (~7%)
+  static const glow = Color(0x40C8102E); // pendar merah di bawah tombol/kartu merah
   static const success = Color(0xFF10B981);
   static const warning = Color(0xFFF59E0B);
   static const info = Color(0xFF0EA5E9);
   static const danger = Color(0xFFEF4444);
 
-  /// Gradasi header: #0A0A0A → #121212 → #1C1C1C → #2A2A2A (kiri-atas → kanan-bawah).
+  /// Gradasi header: Deep Red → Primary → Accent → pink (kiri-atas → kanan-bawah).
   static const brandGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryDark, primary, Color(0xFF1C1C1C), gradientEnd],
+    colors: [primaryDark, primary, accent, gradientEnd],
     stops: [0, 0.38, 0.72, 1],
   );
 
-  /// Gradasi kartu hero (Saldo Aktif): hitam pekat dengan kilau abu gelap di kanan.
+  /// Gradasi kartu hero (Saldo Aktif): merah pekat dengan kilau merah terang di kanan.
   static const cardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -89,14 +88,14 @@ class AppTheme {
   static const buttonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [gradientEnd, primary, primaryDark],
+    colors: [accent, primary, primaryDark],
     stops: [0, 0.5, 1],
   );
 
   /// Bayangan lembut pengganti garis tepi (dipakai Container yang berperan sebagai kartu).
   static const softShadow = [BoxShadow(color: shadow, blurRadius: 24, offset: Offset(0, 8))];
 
-  /// Bayangan gelap lembut untuk elemen hitam (kartu saldo, tombol utama).
+  /// Pendar merah lembut untuk elemen merah (kartu saldo, tombol utama).
   static const glowShadow = [BoxShadow(color: glow, blurRadius: 20, offset: Offset(0, 8))];
 
   /// Warna putih transparan untuk ornamen gelombang di atas gradasi.
@@ -109,25 +108,21 @@ class AppTheme {
   static ThemeData _build(Brightness b, String? fontFamily) {
     final light = b == Brightness.light;
     final scheme = ColorScheme.fromSeed(seedColor: primary, primary: primary, brightness: b).copyWith(
-      // Monokrom murni. Mode gelap: aksen abu terang agar tetap kontras di latar hitam.
-      primary: light ? primary : const Color(0xFFE5E5E5),
-      onPrimary: light ? onBrand : primary,
-      secondary: light ? const Color(0xFF404040) : const Color(0xFFD4D4D4),
-      tertiary: light ? const Color(0xFF525252) : const Color(0xFFA3A3A3),
-      surface: light ? card : const Color(0xFF171717),
-      onSurface: light ? textPrimary : const Color(0xFFF5F5F5),
-      primaryContainer: light ? softPink : const Color(0xFF262626),
-      onPrimaryContainer: light ? primaryDark : const Color(0xFFF5F5F5),
-      surfaceContainerLowest: light ? const Color(0xFFFFFFFF) : const Color(0xFF0A0A0A),
-      surfaceContainerLow: light ? background : const Color(0xFF1C1C1C),
-      surfaceContainer: light ? const Color(0xFFF5F5F5) : const Color(0xFF1C1C1C),
-      surfaceContainerHigh: light ? const Color(0xFFEDEDED) : const Color(0xFF262626),
-      surfaceContainerHighest: light ? const Color(0xFFE5E5E5) : const Color(0xFF2E2E2E),
-      outlineVariant: light ? border : const Color(0xFF2E2E2E),
-      onSurfaceVariant: light ? textSecondary : const Color(0xFFA3A3A3),
+      // Netral murni (abu-abu), tanpa rona merah otomatis dari seed di kartu & input.
+      surface: light ? card : const Color(0xFF16181D),
+      onSurface: light ? textPrimary : const Color(0xFFF3F4F6),
+      primaryContainer: light ? softPink : const Color(0xFF4A1020),
+      onPrimaryContainer: light ? primaryDark : const Color(0xFFFFD9DF),
+      surfaceContainerLowest: light ? const Color(0xFFFFFFFF) : const Color(0xFF0F1115),
+      surfaceContainerLow: light ? background : const Color(0xFF1C1F25),
+      surfaceContainer: light ? const Color(0xFFF1F3F5) : const Color(0xFF1C1F25),
+      surfaceContainerHigh: light ? const Color(0xFFE9ECEF) : const Color(0xFF262A31),
+      surfaceContainerHighest: light ? const Color(0xFFE9ECEF) : const Color(0xFF30353D),
+      outlineVariant: light ? border : const Color(0xFF30353D),
+      onSurfaceVariant: light ? textSecondary : const Color(0xFFA1A1AA),
     );
-    final bg = light ? background : const Color(0xFF0A0A0A);
-    final inactive = light ? navInactive : const Color(0xFFA3A3A3);
+    final bg = light ? background : const Color(0xFF0F1115);
+    final inactive = light ? navInactive : const Color(0xFFA1A1AA);
 
     final base = ThemeData(useMaterial3: true, colorScheme: scheme, brightness: b, fontFamily: fontFamily);
     final t = base.textTheme;
@@ -225,7 +220,7 @@ class AppTheme {
         elevation: 12,
         shadowColor: shadow,
         height: 72,
-        // Aktif: ikon & label hitam di atas pill abu muda; tidak aktif: abu-abu gelap.
+        // Aktif: ikon & label merah di atas pill merah muda; tidak aktif: abu-abu gelap.
         indicatorColor: scheme.primaryContainer,
         indicatorShape: const StadiumBorder(),
         iconTheme: WidgetStateProperty.resolveWith((s) => IconThemeData(

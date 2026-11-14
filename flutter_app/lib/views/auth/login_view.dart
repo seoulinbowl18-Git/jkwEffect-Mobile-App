@@ -174,7 +174,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   }
 }
 
-/// Tombol "Masuk dengan Google": gradasi hitam elegan + lencana "G" putih.
+/// Tombol "Masuk dengan Google": gradasi merah premium + lencana "G" putih.
 class _GoogleButton extends StatelessWidget {
   const _GoogleButton({required this.busy, required this.onPressed});
   final bool busy;

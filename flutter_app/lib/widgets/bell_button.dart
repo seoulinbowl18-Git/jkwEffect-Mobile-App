@@ -18,7 +18,7 @@ class BellButton extends ConsumerWidget {
         await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationsView()));
         ref.invalidate(notificationsProvider);
       },
-      // Ikon putih di atas header gradasi; titik notifikasi putih bertulisan hitam (kontras di atas hitam).
+      // Ikon putih di atas header gradasi; titik notifikasi putih bertulisan merah (kontras di atas merah).
       icon: Badge(
         isLabelVisible: unread > 0,
         label: Text('$unread'),

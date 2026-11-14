@@ -283,7 +283,7 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-/// Judul section (Semi-Bold) + "Lihat Semua" hitam di kanan.
+/// Judul section (Semi-Bold) + "Lihat Semua" merah di kanan.
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.title, {this.onSeeAll});
   final String title;
