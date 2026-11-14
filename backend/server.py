@@ -2089,12 +2089,13 @@ async def get_upload(uid: str):
                              "X-Content-Type-Options": "nosniff"})
 
 
-# ---------------- Pendaftaran Anggota / Relawan PAGI ----------------
+# ---------------- Pendaftaran Member (jenis "anggota") / Relawan PAGI ----------------
 # Formulir web /daftar/{anggota|relawan}. Wajib login Google (sesi biasa, tanpa peran kreator/brand).
 # NIK & foto KTP data pribadi: foto disimpan di db.uploads (kind "ktp") dan TIDAK lewat /api/uploads/{id};
 # hanya admin yang bisa melihatnya lewat /api/admin/registrations/{id}/ktp.
 KTP_MAX_BYTES = 3 * 1024 * 1024
 REG_JENIS = ("anggota", "relawan")
+REG_LABEL = {"anggota": "member", "relawan": "relawan"}  # nama yang tampil ke pengguna
 REG_STATUS = ("menunggu verifikasi", "diterima", "ditolak")
 REG_GENDER = ("Laki-laki", "Perempuan")
 REG_NIKAH = ("Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati")
@@ -2169,9 +2170,9 @@ async def create_registration(
         "telepon": tel, "email": email, "referral": referral.upper(),
     }
     if await db.registrations.find_one({"user_id": user["user_id"], "jenis": jenis}, {"_id": 1}):
-        raise HTTPException(409, f"Akun ini sudah mendaftar sebagai {jenis}")
+        raise HTTPException(409, f"Akun ini sudah mendaftar sebagai {REG_LABEL[jenis]}")
     if await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 1}):
-        raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {jenis}")
+        raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {REG_LABEL[jenis]}")
 
     data = await ktp.read(KTP_MAX_BYTES + 1)
     if len(data) > KTP_MAX_BYTES:

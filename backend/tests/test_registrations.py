@@ -105,3 +105,9 @@ def test_admin_list_and_status(env):
     r = env.patch(f"/api/admin/registrations/{rid}", json={"status": "diterima"}, headers=H["admin_1"])
     assert r.status_code == 200 and r.json()["status"] == "diterima"
     assert env.get("/api/registrations/me", headers=H["warga_1"]).json()[0]["status"] == "diterima"
+
+
+def test_duplicate_message_uses_member_label(env):
+    assert daftar(env).status_code == 200
+    r = daftar(env)
+    assert r.status_code == 409 and "sebagai member" in r.json()["detail"]
