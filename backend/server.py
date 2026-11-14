@@ -2080,13 +2080,173 @@ async def delete_avatar(user=Depends(get_user)):
 
 @api.get("/uploads/{uid}")
 async def get_upload(uid: str):
-    # Bukti klaim tidak publik: hanya lewat /api/proofs/{id} dengan tanda tangan.
-    d = await db.uploads.find_one({"upload_id": uid, "kind": {"$ne": "proof"}}, {"_id": 0, "data": 1, "content_type": 1})
+    # Bukti klaim & foto KTP tidak publik: bukti lewat /api/proofs/{id} bertanda tangan, KTP hanya untuk admin.
+    d = await db.uploads.find_one({"upload_id": uid, "kind": {"$nin": ["proof", "ktp"]}}, {"_id": 0, "data": 1, "content_type": 1})
     if not d:
         raise HTTPException(404, "Gambar tidak ditemukan")
     return Response(content=bytes(d["data"]), media_type=d["content_type"],
                     headers={"Cache-Control": "public, max-age=31536000, immutable",
                              "X-Content-Type-Options": "nosniff"})
+
+
+# ---------------- Pendaftaran Anggota / Relawan PAGI ----------------
+# Formulir web /daftar/{anggota|relawan}. Wajib login Google (sesi biasa, tanpa peran kreator/brand).
+# NIK & foto KTP data pribadi: foto disimpan di db.uploads (kind "ktp") dan TIDAK lewat /api/uploads/{id};
+# hanya admin yang bisa melihatnya lewat /api/admin/registrations/{id}/ktp.
+KTP_MAX_BYTES = 3 * 1024 * 1024
+REG_JENIS = ("anggota", "relawan")
+REG_STATUS = ("menunggu verifikasi", "diterima", "ditolak")
+REG_GENDER = ("Laki-laki", "Perempuan")
+REG_NIKAH = ("Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati")
+REG_PUBLIC = {"_id": 0, "registration_id": 1, "jenis": 1, "nama": 1, "telepon": 1, "status": 1, "created_at": 1,
+              "updated_at": 1, "nik": 1}
+
+
+def _mask_nik(nik: str) -> str:
+    return nik[:6] + "******" + nik[-4:] if len(nik) == 16 else ""
+
+
+def _reg_out(d: dict) -> dict:
+    out = {k: v for k, v in d.items() if k not in ("_id", "nik", "ktp_upload_id")}
+    if "nik" in d:
+        out["nik_masked"] = _mask_nik(d["nik"])
+    return out
+
+
+def _clean(v: str, field: str, max_len: int, min_len: int = 1) -> str:
+    v = re.sub(r"\s+", " ", (v or "").strip())
+    if len(v) < min_len or len(v) > max_len:
+        raise HTTPException(422, f"{field} tidak valid")
+    return v
+
+
+@api.post("/registrations")
+async def create_registration(
+    request: Request,
+    jenis: str = Form(...), nik: str = Form(...), nama: str = Form(...), kota_lahir: str = Form(...),
+    tanggal_lahir: str = Form(...), jenis_kelamin: str = Form(...),
+    provinsi: str = Form(...), kabupaten: str = Form(...), kecamatan: str = Form(...), kelurahan: str = Form(...),
+    provinsi_id: str = Form(""), kabupaten_id: str = Form(""), kecamatan_id: str = Form(""), kelurahan_id: str = Form(""),
+    alamat: str = Form(...), status_pernikahan: str = Form(...), telepon: str = Form(...), email: str = Form(...),
+    referral: str = Form(""), persetujuan: str = Form(...), ktp: UploadFile = File(...),
+    user=Depends(get_user),
+):
+    if jenis not in REG_JENIS:
+        raise HTTPException(422, "Jenis pendaftaran tidak dikenal")
+    if persetujuan.lower() not in ("true", "1", "ya", "on"):
+        raise HTTPException(422, "Pernyataan persetujuan wajib dicentang")
+    if not re.fullmatch(r"\d{16}", nik or ""):
+        raise HTTPException(422, "NIK harus 16 digit angka")
+    try:
+        lahir = datetime.strptime(tanggal_lahir, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        raise HTTPException(422, "Tanggal lahir tidak valid")
+    umur = (now() - lahir).days / 365.25
+    if umur < 17 or umur > 120:
+        raise HTTPException(422, "Usia pendaftar minimal 17 tahun")
+    if jenis_kelamin not in REG_GENDER:
+        raise HTTPException(422, "Jenis kelamin tidak valid")
+    if status_pernikahan not in REG_NIKAH:
+        raise HTTPException(422, "Status pernikahan tidak valid")
+    tel = re.sub(r"[\s-]", "", telepon or "")
+    if not re.fullmatch(r"(\+62|62|0)8\d{7,12}", tel):
+        raise HTTPException(422, "Nomor WhatsApp tidak valid")
+    tel = "62" + re.sub(r"^(\+62|62|0)", "", tel)
+    email = (email or "").strip().lower()
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email) or len(email) > 120:
+        raise HTTPException(422, "Email tidak valid")
+    referral = (referral or "").strip()
+    if referral and not re.fullmatch(r"[A-Za-z0-9_-]{3,32}", referral):
+        raise HTTPException(422, "Kode referral tidak valid")
+    doc = {
+        "jenis": jenis, "nik": nik, "nama": _clean(nama, "Nama", 100, 3), "kota_lahir": _clean(kota_lahir, "Kota kelahiran", 60),
+        "tanggal_lahir": tanggal_lahir, "jenis_kelamin": jenis_kelamin,
+        "provinsi": _clean(provinsi, "Provinsi", 80), "kabupaten": _clean(kabupaten, "Kabupaten/Kota", 80),
+        "kecamatan": _clean(kecamatan, "Kecamatan", 80), "kelurahan": _clean(kelurahan, "Kelurahan/Desa", 80),
+        "wilayah_id": {"provinsi": provinsi_id[:16], "kabupaten": kabupaten_id[:16],
+                       "kecamatan": kecamatan_id[:16], "kelurahan": kelurahan_id[:16]},
+        "alamat": _clean(alamat, "Alamat lengkap", 300, 10), "status_pernikahan": status_pernikahan,
+        "telepon": tel, "email": email, "referral": referral.upper(),
+    }
+    if await db.registrations.find_one({"user_id": user["user_id"], "jenis": jenis}, {"_id": 1}):
+        raise HTTPException(409, f"Akun ini sudah mendaftar sebagai {jenis}")
+    if await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 1}):
+        raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {jenis}")
+
+    data = await ktp.read(KTP_MAX_BYTES + 1)
+    if len(data) > KTP_MAX_BYTES:
+        raise HTTPException(413, "Ukuran foto KTP maksimal 3 MB")
+    ctype = sniff_image(data)
+    if not ctype:
+        raise HTTPException(400, "Foto KTP harus JPG, PNG, atau WebP")
+    upload_id = gen_id("ktp")
+    rid = gen_id("reg")
+    ts = iso()
+    await db.uploads.insert_one({"upload_id": upload_id, "owner_id": user["user_id"], "content_type": ctype, "kind": "ktp",
+                                 "size": len(data), "data": data, "created_at": ts})
+    doc.update({"registration_id": rid, "user_id": user["user_id"], "account_email": user.get("email"),
+                "ktp_upload_id": upload_id, "status": "menunggu verifikasi", "persetujuan_at": ts,
+                "created_at": ts, "updated_at": ts})
+    try:
+        await db.registrations.insert_one(doc)
+    except DuplicateKeyError:
+        await db.uploads.delete_one({"upload_id": upload_id})
+        raise HTTPException(409, "Data ini sudah terdaftar")
+    return _reg_out({k: v for k, v in doc.items() if k in REG_PUBLIC})
+
+
+@api.get("/registrations/me")
+async def my_registrations(user=Depends(get_user)):
+    docs = await db.registrations.find({"user_id": user["user_id"]}, REG_PUBLIC).sort("created_at", -1).to_list(10)
+    return [_reg_out(d) for d in docs]
+
+
+@api.get("/admin/registrations")
+async def admin_registrations(jenis: Optional[str] = None, status: Optional[str] = None, q: Optional[str] = None,
+                              limit: int = 100, skip: int = 0, user=Depends(require("admin"))):
+    flt = {}
+    if jenis in REG_JENIS:
+        flt["jenis"] = jenis
+    if status in REG_STATUS:
+        flt["status"] = status
+    if q:
+        rx = {"$regex": re.escape(q.strip()[:60]), "$options": "i"}
+        flt["$or"] = [{"nama": rx}, {"nik": rx}, {"telepon": rx}, {"email": rx}, {"kabupaten": rx}]
+    limit = max(1, min(limit, 500))
+    docs = await db.registrations.find(flt, {"_id": 0}).sort("created_at", -1).skip(max(0, skip)).to_list(limit)
+    total = await db.registrations.count_documents(flt)
+    # Admin melihat NIK lengkap untuk verifikasi; foto KTP lewat endpoint terpisah.
+    return {"total": total, "items": [{**{k: v for k, v in d.items() if k != "ktp_upload_id"},
+                                       "has_ktp": bool(d.get("ktp_upload_id"))} for d in docs]}
+
+
+@api.get("/admin/registrations/{rid}/ktp")
+async def admin_registration_ktp(rid: str, user=Depends(require("admin"))):
+    reg = await db.registrations.find_one({"registration_id": rid}, {"_id": 0, "ktp_upload_id": 1})
+    if not reg or not reg.get("ktp_upload_id"):
+        raise HTTPException(404, "Foto KTP tidak ditemukan")
+    d = await db.uploads.find_one({"upload_id": reg["ktp_upload_id"], "kind": "ktp"}, {"_id": 0, "data": 1, "content_type": 1})
+    if not d:
+        raise HTTPException(404, "Foto KTP tidak ditemukan")
+    return Response(content=bytes(d["data"]), media_type=d["content_type"],
+                    headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+
+class RegistrationStatusIn(BaseModel):
+    status: Literal["menunggu verifikasi", "diterima", "ditolak"]
+    note: str = Field("", max_length=300)
+
+
+@api.patch("/admin/registrations/{rid}")
+async def admin_set_registration_status(rid: str, body: RegistrationStatusIn, user=Depends(require("admin"))):
+    reg = await db.registrations.find_one_and_update(
+        {"registration_id": rid}, {"$set": {"status": body.status, "status_note": body.note.strip(), "updated_at": iso(),
+                                            "reviewed_by": user["user_id"]}},
+        projection={"_id": 0, "ktp_upload_id": 0}, return_document=ReturnDocument.AFTER)
+    if not reg:
+        raise HTTPException(404, "Pendaftaran tidak ditemukan")
+    await audit_if_owner(user, "registration_status", rid, {"status": body.status, "jenis": reg["jenis"]})
+    return reg
 
 
 # ---------------- Public ----------------
@@ -2153,6 +2313,10 @@ async def startup():
     await db.topups.create_index("payment_id")
     await db.topups.create_index([("status", 1), ("created_at", -1)])
     await db.uploads.create_index("upload_id", unique=True)
+    await db.registrations.create_index("registration_id", unique=True)
+    await db.registrations.create_index([("user_id", 1), ("jenis", 1)], unique=True)
+    await db.registrations.create_index([("jenis", 1), ("nik", 1)], unique=True)
+    await db.registrations.create_index([("status", 1), ("created_at", -1)])
     if RECONCILE_SECONDS > 0 and komerce_configured():
         app.state.reconciler = asyncio.create_task(_reconcile_loop())
         logger.info("Komerce configured (%s); reconciling pending top-ups every %ss",
