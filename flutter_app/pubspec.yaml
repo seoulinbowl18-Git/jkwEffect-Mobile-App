@@ -105,7 +105,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 # ---------------------------------------------------------------------------
-# Branding: ikon aplikasi & native splash screen (Premium Red #C8102E).
+# Branding: ikon aplikasi & native splash screen (Sleek Black #0A0A0A).
 # Taruh file di assets/images/icon.png dan assets/images/splash.png, lalu:
 #   flutter pub get
 #   dart run flutter_launcher_icons
@@ -117,16 +117,16 @@ flutter_launcher_icons:
   image_path: "assets/images/icon.png"
   min_sdk_android: 21
   remove_alpha_ios: true
-  background_color_ios: "#C8102E"
+  background_color_ios: "#0A0A0A"
   # Android 8+ adaptive icon: red background + white logo (fills the launcher shape on every phone).
-  adaptive_icon_background: "#C8102E"
+  adaptive_icon_background: "#0A0A0A"
   adaptive_icon_foreground: "assets/images/icon_foreground.png"
 
 flutter_native_splash:
-  color: "#C8102E"
+  color: "#0A0A0A"
   image: assets/images/splash.png
   android_12:
-    color: "#C8102E"
-    icon_background_color: "#C8102E"
+    color: "#0A0A0A"
+    icon_background_color: "#0A0A0A"
     image: assets/images/splash.png
   web: false

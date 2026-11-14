@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 
-/// Komponen baku "Premium Red" (dipakai Dompet, Profil, dan halaman berikutnya).
+/// Komponen baku "Sleek Black" (dipakai Dompet, Profil, dan halaman berikutnya).
 
-/// Tombol aksi utama: gradasi merah + pendar lembut, ikon + label di tengah, panah di kanan.
+/// Tombol aksi utama: gradasi hitam + pendar lembut, ikon + label di tengah, panah di kanan.
 /// [buttonKey] dipasang di [FilledButton] di dalamnya agar test/aksesibilitas tetap
 /// melihat tombol Material biasa (termasuk status nonaktif).
 class GradientButton extends StatelessWidget {
@@ -54,7 +54,7 @@ class GradientButton extends StatelessWidget {
   }
 }
 
-/// Tombol aksi kedua: putih, garis tepi merah, teks merah, panah di kanan.
+/// Tombol aksi kedua: putih, garis tepi hitam, teks hitam, panah di kanan.
 class OutlineActionButton extends StatelessWidget {
   const OutlineActionButton({
     super.key,
@@ -111,7 +111,7 @@ class _ButtonContent extends StatelessWidget {
       ]);
 }
 
-/// Ikon menu di kotak bersudut merah muda (soft pink) — gaya ikon baku semua menu.
+/// Ikon menu di kotak bersudut abu muda — gaya ikon baku semua menu.
 class IconBadge extends StatelessWidget {
   const IconBadge(this.icon, {super.key, this.size = 46});
   final IconData icon;
@@ -129,7 +129,7 @@ class IconBadge extends StatelessWidget {
   }
 }
 
-/// Judul section dengan garis aksen merah di kiri + tombol pill "Lihat Semua" opsional.
+/// Judul section dengan garis aksen hitam di kiri + tombol pill "Lihat Semua" opsional.
 class AccentSectionTitle extends StatelessWidget {
   const AccentSectionTitle(this.title, {super.key, this.actionLabel = 'Lihat Semua', this.onAction, this.actionKey});
   final String title;

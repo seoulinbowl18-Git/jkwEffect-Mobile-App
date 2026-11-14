@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Logo PAGI: huruf "P" dengan tombol putar di lengkungnya (kreator video).
-/// [onDark] = versi putih di atas header gradasi merah.
+/// [onDark] = versi putih di atas header gradasi hitam.
 class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 40, this.showName = false, this.onDark = false});
   final double size;

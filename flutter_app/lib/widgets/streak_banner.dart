@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/stats.dart';
 
-/// Kartu "Streak Harian": progress horizontal dengan lingkaran centang merah
+/// Kartu "Streak Harian": progress horizontal dengan lingkaran centang hitam
 /// untuk hari yang sudah posting, garis penghubung, dan label hari di bawahnya.
 class StreakBanner extends StatelessWidget {
   const StreakBanner({super.key, required this.streak});

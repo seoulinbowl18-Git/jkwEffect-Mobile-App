@@ -117,8 +117,8 @@ dan disajikan dari `GET /api/uploads/{id}`.
 
 ## Desain & screenshot
 
-**Acuan: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)** — Material 3 modern & clean: merah `#CB1B32`,
-header gradasi merah → merah muda, kartu putih berbayangan lembut di atas `#F8F9FA`, radius 12–16.
+**Acuan: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)** — Material 3 modern & clean: hitam `#121212`,
+header gradasi hitam → abu gelap, kartu putih berbayangan lembut di atas `#F8F9FA`, radius 12–16.
 
 - Beranda kreator vs gambar referensi: `docs/screenshots/beranda_vs_referensi.png`.
 - Lembar screenshot: `docs/screenshots/` (6 halaman utama) dan `docs/screenshots/halaman_lain/`,

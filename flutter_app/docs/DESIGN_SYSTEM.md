@@ -1,8 +1,8 @@
 # PAGI — Design System
 
-Gaya: **Premium Red — modern, elegant & professional.** Header gradasi merah → pink bersudut
+Gaya: **Sleek Black — modern, elegant & professional.** Header gradasi hitam → abu gelap bersudut
 bawah melengkung dengan ornamen gelombang, kartu putih bersudut besar berbayangan lembut di atas
-latar abu-abu kebiruan, ikon di kotak soft pink. Acuan visual: referensi halaman Dompet & Profil.
+latar abu-abu kebiruan, ikon di kotak abu muda. Acuan visual: referensi halaman Dompet & Profil.
 
 **Semua nilai visual berasal dari `lib/core/theme.dart`.** Jangan menulis warna, ukuran font, atau
 radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
@@ -11,9 +11,9 @@ radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
 
 | Token | Nilai | Dipakai untuk |
 |---|---|---|
-| `AppTheme.primary` | `#C8102E` Primary Red | Tombol, tab aktif, tautan, ikon menu, aksen |
-| `AppTheme.primaryDark` | `#A50021` Deep Red | Awal gradasi |
-| `AppTheme.accent` | `#F21D43` Accent Red | Kilau gradasi tombol & kartu |
+| `AppTheme.primary` | `#121212` Sleek Black | Tombol, tab aktif, tautan, ikon menu, aksen |
+| `AppTheme.primaryDark` | `#0A0A0A` Jet Black | Awal gradasi |
+| `AppTheme.accent` | `#1E1E1E` Charcoal | Kilau gradasi tombol & kartu |
 | `AppTheme.softPink` | `#FCE5EA` (`colorScheme.primaryContainer`) | Latar ikon menu, pill tab aktif, badge "Segera", "Lihat Semua" |
 | `AppTheme.background` | `#F8F9FC` | Latar semua halaman |
 | `AppTheme.card` | `#FFFFFF` | Kartu, input, nav bar |
@@ -21,7 +21,7 @@ radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
 | `AppTheme.border` | `#E9E9EF` | Garis tepi & pemisah (`outlineVariant`) |
 | `AppTheme.navInactive` | `#5B5F6B` | Tab bawah tidak aktif |
 | Gradasi | `brandGradient` (header), `cardGradient` (kartu Saldo Aktif), `buttonGradient` (tombol utama) | |
-| Bayangan | `softShadow` (kartu), `glowShadow` (pendar merah elemen merah) | |
+| Bayangan | `softShadow` (kartu), `glowShadow` (bayangan gelap elemen hitam) | |
 | Status | success `#10B981`, warning `#F59E0B`, info `#0EA5E9`, danger `#EF4444` | `StatusChip` |
 
 ## Bentuk, bayangan, spasi
@@ -37,7 +37,7 @@ radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
 |---|---|
 | Judul header tab utama (Profil) | `headlineSmall` ExtraBold, putih (`AppHeader(tall: true)`) |
 | Judul header halaman biasa | `titleLarge` 22 Bold, putih |
-| Judul section | `titleLarge` Bold + garis aksen merah (`AccentSectionTitle`) |
+| Judul section | `titleLarge` Bold + garis aksen hitam (`AccentSectionTitle`) |
 | Baris menu | `titleMedium` SemiBold |
 | Nominal besar (saldo) | `displaySmall` ExtraBold |
 | Keterangan | `bodySmall` / `bodyMedium`, abu-abu `#777B86` |
@@ -50,16 +50,16 @@ radius langsung di halaman (dijaga otomatis oleh `test/design_lint_test.dart`).
 | `GradientPanel`, `BrandWavePainter` | `lib/widgets/app_header.dart` | Header kustom & ornamen kartu hero |
 | `BrandLogo` | `lib/widgets/brand_logo.dart` | Logo "P" + play, putih di atas gradasi |
 | `UserAvatar` (`ring`, `badge`) | `lib/widgets/user_avatar.dart` | Avatar foto/inisial di header & kartu |
-| `GradientButton` | `lib/widgets/premium.dart` | Aksi utama: gradasi merah, ikon + label, panah |
-| `OutlineActionButton` | `lib/widgets/premium.dart` | Aksi kedua: putih, garis merah, panah |
-| `IconBadge` | `lib/widgets/premium.dart` | Ikon merah di kotak soft pink |
+| `GradientButton` | `lib/widgets/premium.dart` | Aksi utama: gradasi hitam, ikon + label, panah |
+| `OutlineActionButton` | `lib/widgets/premium.dart` | Aksi kedua: putih, garis hitam, panah |
+| `IconBadge` | `lib/widgets/premium.dart` | Ikon hitam di kotak abu muda |
 | `AccentSectionTitle` | `lib/widgets/premium.dart` | Judul section + pill "Lihat Semua" |
 | `PremiumCard` | `lib/widgets/premium.dart` | Kartu putih radius 24 + bayangan lembut |
 | `AccountMenuCard`, `MenuRow` | `lib/widgets/account_menu.dart` | Menu akun (Konten saya, Voucher, Ajak Teman, FAQ, Pengaturan, Keluar) |
 | `StreakBanner`, `CampaignTile` | `lib/widgets/` | Beranda kreator |
 
-- **Navigasi bawah** (`NavigationBar` M3): putih; aktif = ikon & label merah tebal di atas
-  **pill soft pink**; tidak aktif = abu-abu gelap. Kreator **Beranda · Jelajah · Dompet · Profil**.
+- **Navigasi bawah** (`NavigationBar` M3): putih; aktif = ikon & label hitam tebal di atas
+  **pill abu muda**; tidak aktif = abu-abu gelap. Kreator **Beranda · Jelajah · Dompet · Profil**.
 - **Dompet**: header logo + avatar → kartu Saldo Aktif (gradasi, sembunyikan saldo, Total
   Pendapatan & Sedang dicek) → `GradientButton` Tarik saldo → timeline Riwayat Penarikan
   (data asli, "Lihat Semua" → daftar lengkap) → `AccountMenuCard`.

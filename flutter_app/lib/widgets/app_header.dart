@@ -43,7 +43,7 @@ class BrandWavePainter extends CustomPainter {
   bool shouldRepaint(BrandWavePainter old) => old.strength != strength;
 }
 
-/// Panel bergradasi merah → pink bersudut bawah melengkung + ornamen gelombang
+/// Panel bergradasi hitam → abu gelap bersudut bawah melengkung + ornamen gelombang
 /// (header semua halaman, Beranda, Login).
 class GradientPanel extends StatelessWidget {
   const GradientPanel({
@@ -74,7 +74,7 @@ class GradientPanel extends StatelessWidget {
       );
 }
 
-/// AppBar standar semua halaman: gradasi merah, judul & ikon putih, sudut bawah melengkung.
+/// AppBar standar semua halaman: gradasi hitam, judul & ikon putih, sudut bawah melengkung.
 ///
 /// [tall] = header besar (halaman tab utama: Dompet, Profil) dengan judul lebih
 /// besar dan ruang untuk avatar; [subtitle] = baris kecil di bawah judul.
