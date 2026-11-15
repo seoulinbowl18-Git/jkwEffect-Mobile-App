@@ -37,13 +37,15 @@ class BrandLogo extends StatelessWidget {
               ),
             ),
             SizedBox(height: size * 0.06),
+            // Slogan dua baris agar lebarnya setara teks lama (tanpa Flexible: logo juga dipakai di FittedBox).
             Text(
-              'Pasukan Gibran Indonesia',
+              'Bergerak Bersama,\nMenuju Indonesia Maju 2029.',
+              maxLines: 2,
               style: TextStyle(
                 color: onDark ? cs.onPrimary.withValues(alpha: 0.85) : cs.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
                 fontSize: (size * 0.3).clamp(10.0, 18.0), // design-ok: logo proporsional, min 10 agar terbaca
-                height: 1,
+                height: 1.15,
               ),
             ),
           ],

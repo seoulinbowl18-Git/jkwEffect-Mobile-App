@@ -2100,7 +2100,19 @@ REG_STATUS = ("menunggu verifikasi", "diterima", "ditolak")
 REG_GENDER = ("Laki-laki", "Perempuan")
 REG_NIKAH = ("Belum Kawin", "Kawin", "Cerai Hidup", "Cerai Mati")
 REG_PUBLIC = {"_id": 0, "registration_id": 1, "jenis": 1, "nama": 1, "telepon": 1, "status": 1, "created_at": 1,
-              "updated_at": 1, "nik": 1}
+              "updated_at": 1, "nik": 1, "status_note": 1, "kta_number": 1, "kta_issued_at": 1,
+              "kabupaten": 1, "provinsi": 1, "kecamatan": 1, "kelurahan": 1}
+KTA_PREFIX = {"anggota": "M", "relawan": "R"}  # Member / Relawan
+
+
+async def _issue_kta_number(reg: dict) -> str:
+    """Nomor KTA unik: G2029-<M|R>-<kode provinsi 2 digit>-<urutan 6 digit>, mis. G2029-M-33-000001.
+    Urutan berjalan per jenis (atomik lewat db.counters), tidak pernah dipakai ulang."""
+    c = await db.counters.find_one_and_update({"_id": f"kta_{reg['jenis']}"}, {"$inc": {"seq": 1}},
+                                              upsert=True, return_document=ReturnDocument.AFTER)
+    prov = ((reg.get("wilayah_id") or {}).get("provinsi") or "")[:2]
+    prov = prov if re.fullmatch(r"\d{2}", prov) else "00"
+    return f"G2029-{KTA_PREFIX[reg['jenis']]}-{prov}-{c['seq']:06d}"
 
 
 def _mask_nik(nik: str) -> str:
@@ -2169,9 +2181,13 @@ async def create_registration(
         "alamat": _clean(alamat, "Alamat lengkap", 300, 10), "status_pernikahan": status_pernikahan,
         "telepon": tel, "email": email, "referral": referral.upper(),
     }
-    if await db.registrations.find_one({"user_id": user["user_id"], "jenis": jenis}, {"_id": 1}):
+    # Pendaftaran yang ditolak boleh dikirim ulang: data lama milik akun ini (dan foto KTP-nya) diganti.
+    mine = await db.registrations.find_one({"user_id": user["user_id"], "jenis": jenis},
+                                           {"_id": 0, "registration_id": 1, "status": 1, "ktp_upload_id": 1})
+    if mine and mine.get("status") != "ditolak":
         raise HTTPException(409, f"Akun ini sudah mendaftar sebagai {REG_LABEL[jenis]}")
-    if await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 1}):
+    other = await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 0, "registration_id": 1})
+    if other and (not mine or other["registration_id"] != mine["registration_id"]):
         raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {REG_LABEL[jenis]}")
 
     data = await ktp.read(KTP_MAX_BYTES + 1)
@@ -2188,6 +2204,10 @@ async def create_registration(
     doc.update({"registration_id": rid, "user_id": user["user_id"], "account_email": user.get("email"),
                 "ktp_upload_id": upload_id, "status": "menunggu verifikasi", "persetujuan_at": ts,
                 "created_at": ts, "updated_at": ts})
+    if mine:
+        await db.registrations.delete_one({"registration_id": mine["registration_id"], "status": "ditolak"})
+        if mine.get("ktp_upload_id"):
+            await db.uploads.delete_one({"upload_id": mine["ktp_upload_id"], "kind": "ktp"})
     try:
         await db.registrations.insert_one(doc)
     except DuplicateKeyError:
@@ -2216,8 +2236,10 @@ async def admin_registrations(jenis: Optional[str] = None, status: Optional[str]
     limit = max(1, min(limit, 500))
     docs = await db.registrations.find(flt, {"_id": 0}).sort("created_at", -1).skip(max(0, skip)).to_list(limit)
     total = await db.registrations.count_documents(flt)
+    base = {k: v for k, v in flt.items() if k != "status"}
+    counts = {st: await db.registrations.count_documents({**base, "status": st}) for st in REG_STATUS}
     # Admin melihat NIK lengkap untuk verifikasi; foto KTP lewat endpoint terpisah.
-    return {"total": total, "items": [{**{k: v for k, v in d.items() if k != "ktp_upload_id"},
+    return {"total": total, "counts": counts, "items": [{**{k: v for k, v in d.items() if k != "ktp_upload_id"},
                                        "has_ktp": bool(d.get("ktp_upload_id"))} for d in docs]}
 
 
@@ -2242,11 +2264,28 @@ class RegistrationStatusIn(BaseModel):
 async def admin_set_registration_status(rid: str, body: RegistrationStatusIn, user=Depends(require("admin"))):
     reg = await db.registrations.find_one_and_update(
         {"registration_id": rid}, {"$set": {"status": body.status, "status_note": body.note.strip(), "updated_at": iso(),
-                                            "reviewed_by": user["user_id"]}},
+                                            "reviewed_by": user["user_id"], "reviewed_at": iso()}},
         projection={"_id": 0, "ktp_upload_id": 0}, return_document=ReturnDocument.AFTER)
     if not reg:
         raise HTTPException(404, "Pendaftaran tidak ditemukan")
-    await audit_if_owner(user, "registration_status", rid, {"status": body.status, "jenis": reg["jenis"]})
+    label = REG_LABEL[reg["jenis"]]
+    if body.status == "diterima" and not reg.get("kta_number"):
+        # Nomor KTA dibuat sekali saja (persetujuan ulang tidak membuat nomor baru).
+        number = await _issue_kta_number(reg)
+        upd = await db.registrations.find_one_and_update(
+            {"registration_id": rid, "kta_number": {"$exists": False}},
+            {"$set": {"kta_number": number, "kta_issued_at": iso()}},
+            projection={"_id": 0, "ktp_upload_id": 0}, return_document=ReturnDocument.AFTER)
+        reg = upd or await db.registrations.find_one({"registration_id": rid}, {"_id": 0, "ktp_upload_id": 0})
+    if body.status == "diterima":
+        await notify(reg["user_id"], f"Pendaftaran {label} disetujui",
+                     f"Selamat! Nomor KTA digital kamu: {reg['kta_number']}. Lihat & unduh kartumu di halaman KTA.", "success")
+    elif body.status == "ditolak":
+        await notify(reg["user_id"], f"Pendaftaran {label} ditolak",
+                     (f"Alasan: {body.note.strip()}. " if body.note.strip() else "") + "Perbaiki data lalu kirim ulang pendaftaran.",
+                     "error")
+    await audit_if_owner(user, "registration_status", rid, {"status": body.status, "jenis": reg["jenis"],
+                                                            "kta_number": reg.get("kta_number")})
     return reg
 
 
@@ -2318,6 +2357,7 @@ async def startup():
     await db.registrations.create_index([("user_id", 1), ("jenis", 1)], unique=True)
     await db.registrations.create_index([("jenis", 1), ("nik", 1)], unique=True)
     await db.registrations.create_index([("status", 1), ("created_at", -1)])
+    await db.registrations.create_index("kta_number", unique=True, sparse=True)
     if RECONCILE_SECONDS > 0 and komerce_configured():
         app.state.reconciler = asyncio.create_task(_reconcile_loop())
         logger.info("Komerce configured (%s); reconciling pending top-ups every %ss",

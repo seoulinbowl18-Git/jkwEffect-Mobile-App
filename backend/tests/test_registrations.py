@@ -111,3 +111,40 @@ def test_duplicate_message_uses_member_label(env):
     assert daftar(env).status_code == 200
     r = daftar(env)
     assert r.status_code == 409 and "sebagai member" in r.json()["detail"]
+
+
+def _approve(env, rid, status="diterima", note=""):
+    return env.patch(f"/api/admin/registrations/{rid}", json={"status": status, "note": note}, headers=H["admin_1"])
+
+
+def test_approve_issues_unique_kta_number_once(env):
+    rid = daftar(env).json()["registration_id"]
+    r = _approve(env, rid)
+    assert r.status_code == 200
+    kta = r.json()["kta_number"]
+    assert kta == "G2029-M-33-000001" and r.json()["kta_issued_at"]
+    assert _approve(env, rid).json()["kta_number"] == kta  # disetujui ulang: nomor tetap
+    me = env.get("/api/registrations/me", headers=H["warga_1"]).json()[0]
+    assert me["kta_number"] == kta and me["kabupaten"] == "KOTA SURAKARTA" and me["nik_masked"].endswith("0123")
+    # Relawan punya urutan sendiri; provinsi manual (tanpa kode) -> 00
+    rid2 = daftar(env, who="warga_2", jenis="relawan", nik="3172010190000999", provinsi_id="").json()["registration_id"]
+    assert _approve(env, rid2).json()["kta_number"] == "G2029-R-00-000001"
+    rid3 = daftar(env, who="warga_2", nik="3172010190000999").json()["registration_id"]
+    assert _approve(env, rid3).json()["kta_number"] == "G2029-M-33-000002"
+    notes = env.portal.call(lambda: server.db.notifications.find({"user_id": "warga_1"}).to_list(10))
+    assert any(kta in n["body"] for n in notes)
+
+
+def test_rejected_can_resubmit_and_others_cannot_approve(env):
+    rid = daftar(env).json()["registration_id"]
+    assert env.patch(f"/api/admin/registrations/{rid}", json={"status": "diterima"}, headers=H["creator_1"]).status_code == 403
+    r = _approve(env, rid, "ditolak", "Foto KTP buram")
+    assert r.status_code == 200 and "kta_number" not in r.json()
+    me = env.get("/api/registrations/me", headers=H["warga_1"]).json()[0]
+    assert me["status"] == "ditolak" and me["status_note"] == "Foto KTP buram"
+    r2 = daftar(env)  # kirim ulang
+    assert r2.status_code == 200 and r2.json()["registration_id"] != rid
+    assert env.portal.call(server.db.registrations.count_documents, {"user_id": "warga_1"}) == 1
+    assert env.portal.call(server.db.uploads.count_documents, {"kind": "ktp"}) == 1
+    lst = env.get("/api/admin/registrations", headers=H["admin_1"]).json()
+    assert lst["counts"] == {"menunggu verifikasi": 1, "diterima": 0, "ditolak": 0}
