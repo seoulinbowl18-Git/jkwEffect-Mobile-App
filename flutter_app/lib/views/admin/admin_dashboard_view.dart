@@ -14,7 +14,7 @@ class AdminDashboardView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(adminStatsProvider);
     return Scaffold(
-      appBar: AppHeader(title: const FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('PAGI Admin'))),
+      appBar: AppHeader(title: const FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text('GIBRAN2029 Admin'))),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(adminStatsProvider.future),
         child: AsyncView(

@@ -54,7 +54,7 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
             Text('Halo, ${user?.firstName ?? ''}!',
                 style: t.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 8),
-            Text('Kamu mau pakai PAGI sebagai apa? Pilihan ini tidak bisa diubah.',
+            Text('Kamu mau pakai GIBRAN2029 sebagai apa? Pilihan ini tidak bisa diubah.',
                 style: t.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 24),
             _RoleOption(

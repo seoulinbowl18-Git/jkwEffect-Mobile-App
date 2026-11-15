@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logo PAGI: huruf "P" dengan tombol putar di lengkungnya (kreator video).
+/// Logo GIBRAN2029: huruf "P" dengan tombol putar di lengkungnya (kreator video).
 /// [onDark] = versi putih di atas header gradasi merah.
 class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 40, this.showName = false, this.onDark = false});
@@ -27,7 +27,7 @@ class BrandLogo extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'PAGI',
+              'GIBRAN2029',
               style: TextStyle(
                 color: onDark ? cs.onPrimary : null,
                 fontWeight: FontWeight.w800,

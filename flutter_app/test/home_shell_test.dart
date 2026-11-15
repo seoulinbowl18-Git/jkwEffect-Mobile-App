@@ -22,7 +22,7 @@ void main() {
     await pumpWithSession(tester, backend, HomeShell(user: User.fromJson(userJson())));
 
     // Beranda: header, streak, campaign horizontal, jelajahi, dompet, profil saya.
-    expect(find.text('PAGI'), findsOneWidget);
+    expect(find.text('GIBRAN2029'), findsOneWidget);
     expect(find.text('3'), findsOneWidget); // badge lonceng
     expect(find.text('Streak Harian'), findsOneWidget);
     expect(find.byKey(const Key('home-campaign-cmp_1')), findsOneWidget);

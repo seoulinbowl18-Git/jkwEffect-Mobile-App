@@ -114,7 +114,7 @@ class _AdminLoginViewState extends ConsumerState<AdminLoginView> {
                   const SizedBox(width: AppSpace.l),
                   Expanded(
                     child: Text(
-                      'Khusus Owner PAGI. Masuk dengan kode OTP yang dikirim ke WhatsApp.',
+                      'Khusus Owner GIBRAN2029. Masuk dengan kode OTP yang dikirim ke WhatsApp.',
                       style: t.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),

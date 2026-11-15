@@ -1,4 +1,4 @@
-# Pendaftaran Anggota / Relawan PAGI (form web /daftar/{jenis}).
+# Pendaftaran Anggota / Relawan GIBRAN2029 (form web /daftar/{jenis}).
 #   pytest tests/test_registrations.py -n 0
 import os
 import sys

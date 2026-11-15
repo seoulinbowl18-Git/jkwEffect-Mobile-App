@@ -42,10 +42,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
   /// "Hubungi Kami" → chat WhatsApp admin dengan pesan pendaftaran brand.
   Future<void> _contactAdmin() => _open(AppConfig.whatsappUri(), 'Kontak WhatsApp admin segera tersedia');
 
-  /// "Gabung Komunitas" → grup Telegram PAGI (link dari backend).
+  /// "Gabung Komunitas" → grup Telegram GIBRAN2029 (link dari backend).
   Future<void> _joinCommunity() async {
     final url = (await ref.read(communityProvider.future).catchError((_) => const CommunityLinks())).telegramUrl;
-    if (mounted) await _open(url.isEmpty ? null : Uri.parse(url), 'Link grup Telegram PAGI segera tersedia');
+    if (mounted) await _open(url.isEmpty ? null : Uri.parse(url), 'Link grup Telegram GIBRAN2029 segera tersedia');
   }
 
   Future<void> _google() async {
@@ -143,7 +143,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
         Text('Belum punya akun? Akun dibuat otomatis saat pertama kali masuk.',
             textAlign: TextAlign.center, style: t.bodySmall),
         const SizedBox(height: AppSpace.l),
-        Text('Dengan masuk, kamu menyetujui Syarat & Ketentuan PAGI.',
+        Text('Dengan masuk, kamu menyetujui Syarat & Ketentuan GIBRAN2029.',
             textAlign: TextAlign.center, style: t.bodySmall?.copyWith(color: cs.outline)),
         // Pintu masuk khusus Owner (OTP WhatsApp); sengaja dibuat tidak menonjol.
         TextButton(

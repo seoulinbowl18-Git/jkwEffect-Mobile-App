@@ -122,7 +122,7 @@ async def get_user(request: Request):
 
 def suspended_message(user):
     reason = (user.get("suspend_reason") or "").strip()
-    return "Akun kamu ditangguhkan" + (f": {reason}" if reason else ". Hubungi admin PAGI.")
+    return "Akun kamu ditangguhkan" + (f": {reason}" if reason else ". Hubungi admin GIBRAN2029.")
 
 
 async def require_owner(user=Depends(get_user)):
@@ -477,7 +477,7 @@ async def admin_request_otp(body: OtpRequestIn, request: Request):
 
     code = f"{secrets.randbelow(1_000_000):06d}"
     await send_whatsapp(phone, (
-        f"*PAGI Admin Pusat*\n\nKode OTP login kamu: *{code}*\n"
+        f"*GIBRAN2029 Admin Pusat*\n\nKode OTP login kamu: *{code}*\n"
         f"Berlaku {OTP_TTL_MINUTES} menit. Jangan berikan kode ini kepada siapa pun."))
     await db.admin_otps.update_one({"phone": phone}, {"$set": {
         "phone": phone, "code_hash": _otp_hash(phone, code), "expires_at": t + timedelta(minutes=OTP_TTL_MINUTES),
@@ -710,7 +710,7 @@ async def public_community():
 
 @api.post("/users/social/telegram/link")
 async def telegram_link_start(user=Depends(get_user)):
-    """One-time deep link to the PAGI bot. Opening it (t.me/<bot>?start=<code>) links the
+    """One-time deep link to the GIBRAN2029 bot. Opening it (t.me/<bot>?start=<code>) links the
     Telegram account to this user and the bot replies with the community group invite."""
     cfg = telegram_config()
     if not (cfg["token"] and cfg["bot"]):
@@ -751,26 +751,26 @@ async def telegram_webhook(request: Request):
     group = ("Masuk grup komunitas", cfg["group"]) if cfg["group"] else None
     code = text.split(maxsplit=1)[1].strip() if " " in text else ""
     if not code:
-        await telegram_send(chat_id, "Halo! Ini bot resmi <b>PAGI</b>. Hubungkan akunmu dari halaman Profil "
-                                     "di web atau aplikasi PAGI.", group)
+        await telegram_send(chat_id, "Halo! Ini bot resmi <b>GIBRAN2029</b>. Hubungkan akunmu dari halaman Profil "
+                                     "di web atau aplikasi GIBRAN2029.", group)
         return {"ok": True}
     link = await db.telegram_links.find_one_and_delete({"code": code})
     if not link or _as_utc(link["expires_at"]) < now():
         await telegram_send(chat_id, "Link sudah kedaluwarsa atau sudah dipakai. Klik lagi <b>Hubungkan Telegram</b> "
-                                     "di halaman Profil PAGI.")
+                                     "di halaman Profil GIBRAN2029.")
         return {"ok": True}
     tg_id = sender.get("id")
     other = await db.users.find_one({"social.telegram.id": tg_id, "user_id": {"$ne": link["user_id"]}}, {"_id": 0, "user_id": 1})
     if other:
-        await telegram_send(chat_id, "Akun Telegram ini sudah terhubung ke akun PAGI lain.")
+        await telegram_send(chat_id, "Akun Telegram ini sudah terhubung ke akun GIBRAN2029 lain.")
         return {"ok": True}
     name = " ".join(x for x in (sender.get("first_name"), sender.get("last_name")) if x)
     await db.users.update_one({"user_id": link["user_id"]}, {"$set": {"social.telegram": {
         "id": tg_id, "username": sender.get("username") or "", "name": name, "linked_at": iso()}}})
     await bump_sync()
     await notify(link["user_id"], "Telegram terhubung", f"Akun Telegram {('@' + sender['username']) if sender.get('username') else name} "
-                                                        "sudah terhubung ke PAGI.", "success")
-    await telegram_send(chat_id, "✅ Akun Telegram kamu sudah terhubung ke <b>PAGI</b>."
+                                                        "sudah terhubung ke GIBRAN2029.", "success")
+    await telegram_send(chat_id, "✅ Akun Telegram kamu sudah terhubung ke <b>GIBRAN2029</b>."
                                  + ("\nKetuk tombol di bawah untuk masuk ke grup komunitas kreator." if group else ""), group)
     return {"ok": True}
 
@@ -1133,7 +1133,7 @@ async def create_submission(body: SubmissionIn, user=Depends(require("creator"))
     today = datetime.now(WIB).date().isoformat()
     await db.users.update_one({"user_id": user["user_id"]}, {"$addToSet": {"post_dates": today}})
     await notify_owners("Submission baru", f"{user['name']} submit video ke {c['title']}")
-    await notify(user["user_id"], c["title"], "Video terkirim dan sedang direview Admin PAGI.")
+    await notify(user["user_id"], c["title"], "Video terkirim dan sedang direview Admin GIBRAN2029.")
     s.pop("_id", None)
     return s
 
@@ -1166,7 +1166,7 @@ async def claim_views(sid: str, body: ClaimIn, user=Depends(require("creator")))
     """Klaim tanpa bukti sudah tidak diterima: kreator wajib melampirkan rekaman layar/screenshot
     analitik lewat POST /submissions/{sid}/claim-proof (aplikasi versi lama mendapat pesan ini)."""
     raise HTTPException(400, "Klaim sekarang wajib melampirkan bukti rekaman layar/screenshot analitik. "
-                             "Perbarui aplikasi PAGI lalu klaim lewat tombol Klaim.")
+                             "Perbarui aplikasi GIBRAN2029 lalu klaim lewat tombol Klaim.")
 
 
 # ---------------- Bukti klaim (screenshot / rekaman layar analitik) ----------------
@@ -1258,7 +1258,7 @@ async def claim_with_proof(sid: str, views: int = Form(...), note: str = Form(""
     await notify_owners("Klaim views baru",
                         f"{user['name']} klaim {views:,} views + {len(proofs)} bukti analitik".replace(",", "."))
     await notify(user["user_id"], s["campaign_title"],
-                 "Klaim & bukti diterima. Views sedang dicek Admin PAGI.")
+                 "Klaim & bukti diterima. Views sedang dicek Admin GIBRAN2029.")
     return {"ok": True, "proofs": with_proof_urls([{"proofs": proofs}])[0]["proofs"]}
 
 
@@ -1382,7 +1382,7 @@ async def verify_views(sid: str, body: VerifyIn, user=Depends(require_owner)):
 async def brand_submissions(user=Depends(require("brand"))):
     """Brand tidak lagi melihat/menangani submission kreator; cukup ringkasan di /brand/stats
     dan /brand/campaigns. Endpoint dipertahankan agar aplikasi lama mendapat pesan yang jelas."""
-    raise HTTPException(403, "Review konten kreator kini dikelola Admin Pusat PAGI. "
+    raise HTTPException(403, "Review konten kreator kini dikelola Admin Pusat GIBRAN2029. "
                              "Lihat ringkasan campaign di dashboard brand.")
 
 
@@ -1973,7 +1973,7 @@ async def owner_update_user(uid: str, body: OwnerUserPatch, owner=Depends(requir
     elif body.status == "active":
         await notify(uid, "Akun aktif kembali", "Akun kamu sudah diaktifkan kembali oleh Owner.", "success")
     if body.verified:
-        await notify(uid, "Akun terverifikasi", "Akun kamu sudah diverifikasi oleh PAGI.", "success")
+        await notify(uid, "Akun terverifikasi", "Akun kamu sudah diverifikasi oleh GIBRAN2029.", "success")
     await audit(owner, "user.edit", target.get("profile", {}).get("brand_name") or target["name"], {"user_id": uid, **detail})
     return await db.users.find_one({"user_id": uid}, {"_id": 0, "post_dates": 0, "password_hash": 0})
 
@@ -2089,7 +2089,7 @@ async def get_upload(uid: str):
                              "X-Content-Type-Options": "nosniff"})
 
 
-# ---------------- Pendaftaran Member (jenis "anggota") / Relawan PAGI ----------------
+# ---------------- Pendaftaran Member (jenis "anggota") / Relawan GIBRAN2029 ----------------
 # Formulir web /daftar/{anggota|relawan}. Wajib login Google (sesi biasa, tanpa peran kreator/brand).
 # NIK & foto KTP data pribadi: foto disimpan di db.uploads (kind "ktp") dan TIDAK lewat /api/uploads/{id};
 # hanya admin yang bisa melihatnya lewat /api/admin/registrations/{id}/ktp.

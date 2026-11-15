@@ -1,4 +1,4 @@
-// Pengaman desain baku PAGI: render semua halaman penting di 4 ukuran HP
+// Pengaman desain baku GIBRAN2029: render semua halaman penting di 4 ukuran HP
 // (kecil, sedang, besar, kecil + huruf 130%) dan GAGAL bila ada overflow /
 // error layout. Selalu ikut `flutter test`.
 //
@@ -78,7 +78,7 @@ Map<String, dynamic> stressCampaign(String id, String title, {int rate = 12500, 
       'min_views': 10000,
       'instructions': '1. Buat video 15–60 detik yang menampilkan produk secara natural.\n'
           '2. Sebutkan nama brand di 3 detik pertama.\n'
-          '3. Wajib pakai hashtag #PAGI dan tag akun brand.\n'
+          '3. Wajib pakai hashtag #GIBRAN2029 dan tag akun brand.\n'
           '4. Dilarang konten SARA, kekerasan, atau beli views/bot.',
       'submission_count': 1284,
       'total_views': 4567890,

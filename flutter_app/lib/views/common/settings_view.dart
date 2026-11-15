@@ -43,7 +43,7 @@ class SettingsView extends StatelessWidget {
               ListTile(
                 leading: Icon(Icons.info_rounded, color: cs.primary),
                 title: const Text('Tentang aplikasi'),
-                subtitle: Text('PAGI v${AppConfig.appVersion}'),
+                subtitle: Text('GIBRAN2029 v${AppConfig.appVersion}'),
               ),
             ]),
           ),

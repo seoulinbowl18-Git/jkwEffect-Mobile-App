@@ -13,19 +13,19 @@ class FaqView extends StatelessWidget {
     (
       'Bagaimana cara dapat cuan?',
       'Pilih campaign di tab Jelajah, buat video sesuai brief, lalu submit link TikTok / Instagram / '
-          'YouTube / Threads. Setelah konten disetujui Admin PAGI, klaim views + unggah rekaman '
+          'YouTube / Threads. Setelah konten disetujui Admin GIBRAN2029, klaim views + unggah rekaman '
           'layar analitik saat target tercapai. Admin mengecek bukti lalu kamu dibayar per 1.000 views.',
     ),
     (
       'Apa arti status konten?',
-      'Direview: menunggu Admin PAGI menyetujui konten. Siap diklaim: kamu bisa klaim views. '
+      'Direview: menunggu Admin GIBRAN2029 menyetujui konten. Siap diklaim: kamu bisa klaim views. '
           'Dicek views: admin sedang memverifikasi bukti & jumlah views. Selesai: bayaran masuk ke saldo. '
           'Ditolak: lihat catatan dari admin.',
     ),
     (
       'Kenapa link saya ditolak?',
       'Link harus berasal dari platform yang diterima campaign dan berupa link video publik. '
-          'Satu video hanya bisa didaftarkan sekali di seluruh PAGI.',
+          'Satu video hanya bisa didaftarkan sekali di seluruh GIBRAN2029.',
     ),
     (
       'Berapa minimal tarik saldo?',
