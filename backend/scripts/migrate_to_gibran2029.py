@@ -18,6 +18,7 @@ import os
 import sys
 
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
 TARGET_DEFAULT = "gibran2029_db"
 USER_FIELDS = ("user_id", "email", "name", "picture", "google_picture", "picture_custom", "avatar_upload_id",
@@ -48,16 +49,35 @@ def migrate(src, dst, apply: bool = False) -> dict:
                "counters": len(counters), "notifications": len(notifs)}
     if not apply:
         return summary
-    for r in regs:
-        dst.registrations.replace_one({"registration_id": r["registration_id"]}, r, upsert=True)
+    # Akun yang sudah dibuat di database baru (login setelah DB_NAME diganti) dipakai ulang berdasarkan email,
+    # agar indeks unik email tidak bentrok; pendaftaran & notifikasi lama ikut dipindah ke akun tersebut.
+    remap = {}
     for u in cleaned:
-        dst.users.replace_one({"user_id": u["user_id"]}, u, upsert=True)
+        existing = dst.users.find_one({"email": u.get("email")}, {"_id": 0, "user_id": 1}) if u.get("email") else None
+        if existing and existing["user_id"] != u["user_id"]:
+            remap[u["user_id"]] = existing["user_id"]
+    skipped = []
+    for u in cleaned:
+        if u["user_id"] in remap:
+            continue
+        try:
+            dst.users.replace_one({"user_id": u["user_id"]}, u, upsert=True)
+        except DuplicateKeyError:
+            skipped.append(f"user {u['user_id']}")
+    for r in regs:
+        r = {**r, "user_id": remap.get(r.get("user_id"), r.get("user_id"))}
+        try:
+            dst.registrations.replace_one({"registration_id": r["registration_id"]}, r, upsert=True)
+        except DuplicateKeyError:  # akun/NIK ini sudah mendaftar ulang di database baru → data baru dipertahankan
+            skipped.append(f"registration {r['registration_id']}")
     for up in uploads:
         dst.uploads.replace_one({"upload_id": up["upload_id"]}, up, upsert=True)
     for c in counters:  # jangan pernah menurunkan urutan KTA yang sudah ada di database baru
         dst.counters.update_one({"_id": c["_id"]}, {"$max": {"seq": c.get("seq", 0)}}, upsert=True)
     for n in notifs:
+        n = {**n, "user_id": remap.get(n.get("user_id"), n.get("user_id"))}
         dst.notifications.replace_one({"notification_id": n["notification_id"]}, n, upsert=True)
+    summary.update({"akun_digabung": len(remap), "dilewati": skipped})
     return summary
 
 

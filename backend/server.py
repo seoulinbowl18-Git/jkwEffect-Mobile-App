@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 import os
+import sys
 import re
 import asyncio
 import time
@@ -2368,6 +2369,29 @@ SEED_INSTR = ("1. Buat video 15-60 detik yang menampilkan produk secara natural.
               "5. Video harus tetap tayang minimal 30 hari.")
 
 
+async def _maybe_migrate_legacy_db():
+    """Migrasi sekali jalan di server: salin data GIBRAN2029 dari database lama ke DB_NAME.
+    Aktif hanya bila MIGRATE_FROM_DB diisi (mis. ourbuzzer). Tanpa MIGRATE_APPLY=true hanya dry run.
+    Hapus kedua variabel setelah selesai. Kegagalan migrasi tidak menghentikan server."""
+    source = (os.environ.get("MIGRATE_FROM_DB") or "").strip()
+    if not source:
+        return
+    if source == DB_NAME:
+        logger.warning("MIGRATE_FROM_DB sama dengan DB_NAME (%s) — migrasi dilewati.", DB_NAME)
+        return
+    apply = os.environ.get("MIGRATE_APPLY", "").lower() in ("1", "true", "yes")
+    try:
+        sys.path.insert(0, str(ROOT_DIR / "scripts"))
+        from migrate_to_gibran2029 import migrate
+        from pymongo import MongoClient
+        sync_client = MongoClient(MONGO_URI)
+        summary = await asyncio.to_thread(migrate, sync_client[source], sync_client[DB_NAME], apply)
+        sync_client.close()
+        logger.warning("MIGRASI %s: %s -> %s %s", "SELESAI" if apply else "DRY RUN", source, DB_NAME, summary)
+    except Exception:
+        logger.exception("Migrasi dari %s gagal", source)
+
+
 @app.on_event("startup")
 async def startup():
     if DB_NAME.lower() in LEGACY_DB_NAMES:
@@ -2408,6 +2432,7 @@ async def startup():
                                         partialFilterExpression={"nik": {"$type": "string"}})
     await db.registrations.create_index([("status", 1), ("created_at", -1)])
     await db.registrations.create_index("kta_number", unique=True, sparse=True)
+    await _maybe_migrate_legacy_db()
     if RECONCILE_SECONDS > 0 and komerce_configured():
         app.state.reconciler = asyncio.create_task(_reconcile_loop())
         logger.info("Komerce configured (%s); reconciling pending top-ups every %ss",

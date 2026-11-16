@@ -62,7 +62,8 @@ def test_migrate_copies_only_gibran2029_data():
     assert dry == {"registrations": 1, "users": 2, "uploads": 2, "counters": 2, "notifications": 1}
     assert new.list_collection_names() == []  # dry run tidak menulis apa pun
 
-    mig.migrate(old, new, apply=True)
+    res = mig.migrate(old, new, apply=True)
+    assert res["akun_digabung"] == 0 and res["dilewati"] == []
     assert new.registrations.find_one({"registration_id": "reg_1"})["kta_number"] == "G2029-R-33-000004"
     u = new.users.find_one({"user_id": "u_reg"})
     assert u["role"] is None and u["brand_balance"] == 0 and u["profile"] == {}  # data komersial lama dibuang
@@ -96,3 +97,59 @@ def test_database_baru_tidak_diisi_campaign_demo_lama(monkeypatch):
     with TestClient(server.app) as c:
         assert c.portal.call(server.db.campaigns.count_documents, {}) == 0
         assert c.portal.call(server.db.users.count_documents, {}) == 0
+
+
+def _new_db_with_indexes(client):
+    new = client["gibran2029_db"]
+    new.users.create_index("user_id", unique=True)
+    new.users.create_index("email", unique=True)
+    new.registrations.create_index("registration_id", unique=True)
+    new.registrations.create_index([("user_id", 1), ("jenis", 1)], unique=True)
+    return new
+
+
+def test_migrate_gabung_akun_yang_sudah_login_di_database_baru():
+    client = mongomock.MongoClient()
+    old = client["ourbuzzer"]
+    _seed_old_db(old)
+    new = _new_db_with_indexes(client)
+    # Setelah DB_NAME diganti, Rina & Owner sudah login lagi → akun baru dengan email yang sama.
+    new.users.insert_many([{"user_id": "u_rina_baru", "email": "rina@gmail.com", "name": "Rina", "role": None},
+                           {"user_id": "u_owner_baru", "email": "owner@x.id", "name": "Owner", "role": "admin", "is_owner": True}])
+    res = mig.migrate(old, new, apply=True)
+    assert res["akun_digabung"] == 2 and res["dilewati"] == []
+    assert new.users.count_documents({}) == 2  # tidak ada akun ganda
+    assert new.registrations.find_one({"registration_id": "reg_1"})["user_id"] == "u_rina_baru"
+    assert new.notifications.find_one({"notification_id": "n1"})["user_id"] == "u_rina_baru"
+
+
+def test_migrate_pendaftaran_ulang_di_database_baru_dipertahankan():
+    client = mongomock.MongoClient()
+    old = client["ourbuzzer"]
+    _seed_old_db(old)
+    new = _new_db_with_indexes(client)
+    new.users.insert_one({"user_id": "u_reg", "email": "rina@gmail.com", "name": "Rina", "role": None})
+    new.registrations.insert_one({"registration_id": "reg_baru", "user_id": "u_reg", "jenis": "relawan", "status": "menunggu verifikasi"})
+    res = mig.migrate(old, new, apply=True)
+    assert res["dilewati"] == ["registration reg_1"]
+    assert [r["registration_id"] for r in new.registrations.find()] == ["reg_baru"]
+
+
+def test_migrasi_di_server_via_env(monkeypatch, caplog):
+    import asyncio
+    import logging
+    import pymongo
+    shared = mongomock.MongoClient()
+    _seed_old_db(shared["ourbuzzer"])
+    monkeypatch.setattr(pymongo, "MongoClient", lambda *a, **k: shared)
+    monkeypatch.setattr(server, "DB_NAME", "gibran2029_db")
+    monkeypatch.setenv("MIGRATE_FROM_DB", "ourbuzzer")
+    caplog.set_level(logging.INFO)
+    asyncio.run(server._maybe_migrate_legacy_db())  # tanpa MIGRATE_APPLY → dry run
+    assert "DRY RUN" in caplog.text and shared["gibran2029_db"].registrations.count_documents({}) == 0
+    monkeypatch.setenv("MIGRATE_APPLY", "true")
+    asyncio.run(server._maybe_migrate_legacy_db())
+    assert "SELESAI" in caplog.text and shared["gibran2029_db"].registrations.count_documents({}) == 1
+    monkeypatch.setenv("MIGRATE_FROM_DB", "gibran2029_db")  # sumber = tujuan → dilewati
+    asyncio.run(server._maybe_migrate_legacy_db())
+    assert "dilewati" in caplog.text
