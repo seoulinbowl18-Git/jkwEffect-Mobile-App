@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/config.dart';
-import '../../core/constants.dart';
-import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
@@ -77,14 +75,15 @@ class _LoginViewState extends ConsumerState<LoginView> {
       child: narrow(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const BrandLogo(size: 38, showName: true, onDark: true),
         const SizedBox(height: AppSpace.xxl),
-        Text(_brandMode ? 'Bikin brand kamu\nviral' : 'Posting video,\ncairkan cuan.',
+        Text(_brandMode ? 'Bikin brand kamu\nviral' : 'Satukan Barisan,\nKawal Masa Depan.',
             key: const Key('login-hero-title'), style: t.headlineLarge?.copyWith(color: cs.onPrimary, height: 1.15)),
         const SizedBox(height: AppSpace.m),
         Text(
           _brandMode
               ? 'Ratusan kreator TikTok, Instagram, YouTube, dan Threads siap posting konten brand kamu. '
                   'Bayar hanya untuk views yang benar-benar terverifikasi.'
-              : 'Dapat bayaran dari setiap 1.000 views video TikTok, Instagram, YouTube, dan Threads kamu.',
+              : 'Bergabunglah dalam barisan relawan dan member resmi GIBRAN2029. '
+                  'Satu langkah nyata untuk gerakan perubahan Indonesia.',
           style: t.bodyLarge?.copyWith(color: AppTheme.onBrandAlpha(0.9)),
         ),
         const SizedBox(height: AppSpace.xl),
@@ -101,10 +100,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 (Icons.verified_rounded, 'Bayar hanya untuk views yang terverifikasi'),
                 (Icons.insights_rounded, 'Pantau views & budget campaign secara real-time'),
               ]
-            : [
-                (Icons.campaign_rounded, 'Ratusan campaign aktif dari brand'),
-                (Icons.account_balance_wallet_rounded, 'Tarik saldo mulai ${rp(kMinWithdraw)}'),
-                (Icons.devices_rounded, 'Satu akun untuk aplikasi & versi web'),
+            : const [
+                (Icons.badge_rounded, 'Daftar member resmi & dapatkan KTA digital'),
+                (Icons.hub_rounded, 'Terhubung dengan koordinasi wilayah hingga kelurahan'),
+                (Icons.volunteer_activism_rounded, 'Ikut aksi, kegiatan, dan gerakan relawan'),
               ])
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.m),

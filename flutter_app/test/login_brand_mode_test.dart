@@ -60,7 +60,7 @@ void main() {
 
   testWidgets('Mode Kreator (default): Gabung Komunitas → grup Telegram', (tester) async {
     final launcher = await _pumpLogin(tester);
-    expect(find.text('Posting video,\ncairkan cuan.'), findsOneWidget);
+    expect(find.text('Satukan Barisan,\nKawal Masa Depan.'), findsOneWidget);
     expect(find.byKey(const Key('login-contact-button')), findsNothing);
     await tester.tap(find.byKey(const Key('login-community-button')));
     await tester.pumpAndSettle();
@@ -92,6 +92,6 @@ void main() {
     await tester.tap(find.byKey(const Key('login-mode-creator')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('login-community-button')), findsOneWidget);
-    expect(find.text('Posting video,\ncairkan cuan.'), findsOneWidget);
+    expect(find.text('Satukan Barisan,\nKawal Masa Depan.'), findsOneWidget);
   });
 }
