@@ -7,11 +7,27 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:ourbuzzer/app.dart';
+import 'package:ourbuzzer/core/config.dart';
 import 'package:ourbuzzer/providers/service_providers.dart';
 import 'package:ourbuzzer/services/api_service.dart';
 import 'package:ourbuzzer/services/token_storage.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 /// Penyimpanan token di memori untuk test.
+class _FakeLauncher extends Fake with MockPlatformInterfaceMixin implements UrlLauncherPlatform {
+  final launched = <String>[];
+
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launched.add(url);
+    return true;
+  }
+}
+
 class _MemoryTokenStorage implements TokenStorage {
   _MemoryTokenStorage([this.value]);
   String? value;
@@ -63,30 +79,18 @@ void main() {
     expect(find.text('Belum punya akun? Daftar'), findsNothing);
   });
 
-  testWidgets('token valid tanpa peran → onboarding → pilih Kreator → home', (tester) async {
+  testWidgets('token valid tanpa peran → halaman gabung (tanpa pilihan Kreator/Brand) → formulir web', (tester) async {
+    final launcher = _FakeLauncher();
+    final original = UrlLauncherPlatform.instance;
+    UrlLauncherPlatform.instance = launcher;
+    addTearDown(() => UrlLauncherPlatform.instance = original);
     final storage = _MemoryTokenStorage('tok_1');
     final api = ApiService(
       baseUrl: 'https://x/api',
       client: MockClient((req) async {
         expect(req.headers['Authorization'], 'Bearer tok_1');
-        switch (req.url.path) {
-          case '/api/auth/me':
-            return _json(_user());
-          case '/api/users/role':
-            expect(jsonDecode(req.body), {'role': 'creator'});
-            return _json(_user(role: 'creator'));
-          case '/api/creator/stats':
-            return _json({
-              'balance': 125000,
-              'total_earned': 300000,
-              'pending': 0,
-              'videos': 3,
-              'campaigns': 2,
-              'streak': {'streak': 4, 'posted_today': true, 'week': []},
-            });
-          case '/api/notifications':
-            return _json({'items': [], 'unread': 2});
-        }
+        expect(req.url.path, isNot('/api/users/role')); // peran kreator/brand tidak lagi dipilih
+        if (req.url.path == '/api/auth/me') return _json(_user());
         return _json({'detail': 'Not Found'}, 404);
       }),
     );
@@ -94,16 +98,23 @@ void main() {
     await tester.pumpWidget(_app(api, storage));
     await tester.pumpAndSettle();
     expect(find.text('Halo, Ani!'), findsOneWidget);
+    expect(find.text('Kreator'), findsNothing);
+    expect(find.text('Brand'), findsNothing);
+    expect(find.text('Daftar Relawan'), findsOneWidget);
+    expect(find.text('Daftar Member'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('onboarding-continue-button')));
+    await tester.tap(find.byKey(const Key('onboarding-join-relawan')));
     await tester.pumpAndSettle();
-
-    // Beranda kreator: header, streak harian, dan kartu Dompet Kamu.
-    expect(find.text('Streak Harian'), findsOneWidget);
-    expect(find.textContaining('4 hari berturut-turut'), findsOneWidget);
-    await tester.scrollUntilVisible(find.byKey(const Key('home-wallet-balance')), 300,
-        scrollable: find.byType(Scrollable).first);
-    expect(tester.widget<Text>(find.byKey(const Key('home-wallet-balance'))).data, 'Rp 125.000');
+    await tester.tap(find.byKey(const Key('onboarding-join-member')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('onboarding-kta-button')));
+    await tester.tap(find.byKey(const Key('onboarding-kta-button')));
+    await tester.pumpAndSettle();
+    expect(launcher.launched, [
+      '${AppConfig.webUrl}/daftar/relawan',
+      '${AppConfig.webUrl}/daftar/anggota',
+      '${AppConfig.webUrl}/kta',
+    ]);
   });
 
   testWidgets('token kadaluarsa (401) → dihapus & kembali ke login', (tester) async {

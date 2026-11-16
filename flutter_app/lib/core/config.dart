@@ -19,6 +19,11 @@ class AppConfig {
   /// Semua endpoint backend berada di bawah prefix `/api`.
   static String get apiBase => '$backendUrl/api';
 
+  /// Alamat web GIBRAN2029 (formulir pendaftaran Member/Relawan & KTA digital).
+  /// Ganti lewat `--dart-define=WEB_URL=https://domain-anda`.
+  static const String webUrl = String.fromEnvironment('WEB_URL', defaultValue: 'https://jkw-effect-web.vercel.app');
+  static Uri webPage(String path) => Uri.parse('$webUrl$path');
+
   /// URL gambar dari backend bisa relatif (`/api/uploads/...`) → jadikan absolut.
   static String resolveUrl(String url) => url.startsWith('/') ? '$backendUrl$url' : url;
 

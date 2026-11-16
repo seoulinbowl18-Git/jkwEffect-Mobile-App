@@ -58,40 +58,33 @@ void main() {
     expect(AppConfig.whatsappUriFor(''), isNull);
   });
 
-  testWidgets('Mode Kreator (default): Gabung Komunitas → grup Telegram', (tester) async {
+  testWidgets('Mode Saya Relawan (default): Gabung Komunitas → grup Telegram', (tester) async {
     final launcher = await _pumpLogin(tester);
     expect(find.text('Satukan Barisan,\nKawal Masa Depan.'), findsOneWidget);
-    expect(find.byKey(const Key('login-contact-button')), findsNothing);
+    expect(find.text('Saya Relawan'), findsOneWidget);
+    expect(find.text('Saya Member'), findsOneWidget);
+    expect(find.text('Saya Kreator'), findsNothing);
+    expect(find.text('Saya Brand'), findsNothing);
+    expect(find.text('Ikut aksi sosial & kegiatan wilayah'), findsOneWidget);
     await tester.tap(find.byKey(const Key('login-community-button')));
     await tester.pumpAndSettle();
     expect(launcher.launched.single, 'https://t.me/+OurBuzzerGroup');
   });
 
-  testWidgets('Mode Saya Brand: Hubungi Kami menggantikan Gabung Komunitas, tanpa running text', (tester) async {
+  testWidgets('Mode Saya Member: teks & manfaat member, lalu kembali ke Saya Relawan', (tester) async {
     await _pumpLogin(tester);
-    await tester.tap(find.byKey(const Key('login-mode-brand')));
+    await tester.tap(find.byKey(const Key('login-mode-member')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Bikin brand kamu\nviral'), findsOneWidget);
-    expect(find.byKey(const Key('login-community-button')), findsNothing);
-    expect(find.text('Hubungi Kami'), findsOneWidget);
-    expect(find.text('CardBus'), findsNothing); // running text brand tidak dipakai di aplikasi
-
-    // Nomor admin belum di-set saat test (tanpa --dart-define) → pesan "segera tersedia".
-    await tester.ensureVisible(find.byKey(const Key('login-contact-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('login-contact-button')));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Kontak WhatsApp admin segera tersedia'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
-
-    // Kembali ke mode Kreator.
-    await tester.ensureVisible(find.byKey(const Key('login-mode-creator')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('login-mode-creator')));
-    await tester.pumpAndSettle();
+    expect(find.text('Jadi Member Resmi\nGIBRAN2029.'), findsOneWidget);
+    expect(find.text('KTA digital resmi bernomor unik'), findsOneWidget);
     expect(find.byKey(const Key('login-community-button')), findsOneWidget);
+    expect(find.text('Hubungi Kami'), findsNothing);
+
+    await tester.ensureVisible(find.byKey(const Key('login-mode-relawan')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('login-mode-relawan')));
+    await tester.pumpAndSettle();
     expect(find.text('Satukan Barisan,\nKawal Masa Depan.'), findsOneWidget);
   });
 }

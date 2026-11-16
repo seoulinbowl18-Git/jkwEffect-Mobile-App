@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
@@ -24,8 +23,8 @@ class LoginView extends ConsumerStatefulWidget {
 class _LoginViewState extends ConsumerState<LoginView> {
   bool _busy = false;
 
-  /// Mode tampilan (seperti halaman utama web): Saya Kreator / Saya Brand.
-  bool _brandMode = false;
+  /// Mode tampilan (seperti halaman utama web): Saya Relawan / Saya Member.
+  bool _memberMode = false;
 
   Future<void> _open(Uri? uri, String unavailable) async {
     if (uri == null) {
@@ -36,9 +35,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
       showAppSnack(context, 'Tidak bisa membuka tautan.', isError: true);
     }
   }
-
-  /// "Hubungi Kami" → chat WhatsApp admin dengan pesan pendaftaran brand.
-  Future<void> _contactAdmin() => _open(AppConfig.whatsappUri(), 'Kontak WhatsApp admin segera tersedia');
 
   /// "Gabung Komunitas" → grup Telegram GIBRAN2029 (link dari backend).
   Future<void> _joinCommunity() async {
@@ -75,35 +71,35 @@ class _LoginViewState extends ConsumerState<LoginView> {
       child: narrow(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const BrandLogo(size: 38, showName: true, onDark: true),
         const SizedBox(height: AppSpace.xxl),
-        Text(_brandMode ? 'Bikin brand kamu\nviral' : 'Satukan Barisan,\nKawal Masa Depan.',
+        Text(_memberMode ? 'Jadi Member Resmi\nGIBRAN2029.' : 'Satukan Barisan,\nKawal Masa Depan.',
             key: const Key('login-hero-title'), style: t.headlineLarge?.copyWith(color: cs.onPrimary, height: 1.15)),
         const SizedBox(height: AppSpace.m),
         Text(
-          _brandMode
-              ? 'Ratusan kreator TikTok, Instagram, YouTube, dan Threads siap posting konten brand kamu. '
-                  'Bayar hanya untuk views yang benar-benar terverifikasi.'
+          _memberMode
+              ? 'Daftar sebagai member resmi dan dapatkan KTA digital bernomor unik. '
+                  'Bergerak Bersama, Menuju Indonesia Maju 2029.'
               : 'Bergabunglah dalam barisan relawan dan member resmi GIBRAN2029. '
                   'Satu langkah nyata untuk gerakan perubahan Indonesia.',
           style: t.bodyLarge?.copyWith(color: AppTheme.onBrandAlpha(0.9)),
         ),
         const SizedBox(height: AppSpace.xl),
-        _ModeToggle(brandMode: _brandMode, onChanged: (v) => setState(() => _brandMode = v)),
+        _ModeToggle(memberMode: _memberMode, onChanged: (v) => setState(() => _memberMode = v)),
       ])),
     );
 
     final benefits = Padding(
       padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.xl, AppSpace.xl, 0),
       child: narrow(Column(children: [
-        for (final (icon, label) in _brandMode
+        for (final (icon, label) in _memberMode
             ? const [
-                (Icons.campaign_rounded, 'Buat campaign, tentukan rate per 1.000 views'),
-                (Icons.verified_rounded, 'Bayar hanya untuk views yang terverifikasi'),
-                (Icons.insights_rounded, 'Pantau views & budget campaign secara real-time'),
+                (Icons.badge_rounded, 'KTA digital resmi bernomor unik'),
+                (Icons.hub_rounded, 'Terhubung dengan koordinasi wilayah hingga kelurahan'),
+                (Icons.notifications_active_rounded, 'Akses informasi & agenda prioritas'),
               ]
             : const [
-                (Icons.badge_rounded, 'Daftar member resmi & dapatkan KTA digital'),
-                (Icons.hub_rounded, 'Terhubung dengan koordinasi wilayah hingga kelurahan'),
-                (Icons.volunteer_activism_rounded, 'Ikut aksi, kegiatan, dan gerakan relawan'),
+                (Icons.volunteer_activism_rounded, 'Ikut aksi sosial & kegiatan wilayah'),
+                (Icons.videocam_rounded, 'Misi konten kreator dengan apresiasi'),
+                (Icons.groups_rounded, 'Terhubung dengan barisan relawan se-Indonesia'),
               ])
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.m),
@@ -127,16 +123,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
         _GoogleButton(busy: _busy, onPressed: _google),
         const SizedBox(height: AppSpace.m),
         OutlinedButton.icon(
-          key: Key(_brandMode ? 'login-contact-button' : 'login-community-button'),
-          onPressed: _busy ? null : (_brandMode ? _contactAdmin : _joinCommunity),
+          key: const Key('login-community-button'),
+          onPressed: _busy ? null : _joinCommunity,
           style: OutlinedButton.styleFrom(
             foregroundColor: cs.primary,
             side: BorderSide(color: cs.primary, width: 1.4),
             minimumSize: const Size.fromHeight(54),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.l)),
           ),
-          icon: Icon(_brandMode ? Icons.chat_rounded : Icons.send_rounded, size: 20),
-          label: Text(_brandMode ? 'Hubungi Kami' : 'Gabung Komunitas'),
+          icon: const Icon(Icons.send_rounded, size: 20),
+          label: const Text('Gabung Komunitas'),
         ),
         const SizedBox(height: AppSpace.m),
         Text('Belum punya akun? Akun dibuat otomatis saat pertama kali masuk.',
@@ -227,26 +223,26 @@ class _GoogleButton extends StatelessWidget {
 }
 
 
-/// Pilihan mode di hero: "Saya Kreator" / "Saya Brand" (pill putih untuk yang aktif).
+/// Pilihan mode di hero: "Saya Relawan" / "Saya Member" (pill putih untuk yang aktif).
 class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({required this.brandMode, required this.onChanged});
-  final bool brandMode;
+  const _ModeToggle({required this.memberMode, required this.onChanged});
+  final bool memberMode;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
-    Widget item(bool brand, IconData icon, String label) {
-      final active = brand == brandMode;
+    Widget item(bool member, IconData icon, String label) {
+      final active = member == memberMode;
       return Flexible(
         child: Material(
           color: active ? cs.surface : Colors.transparent,
           shape: const StadiumBorder(),
           child: InkWell(
-            key: Key(brand ? 'login-mode-brand' : 'login-mode-creator'),
+            key: Key(member ? 'login-mode-member' : 'login-mode-relawan'),
             customBorder: const StadiumBorder(),
-            onTap: () => onChanged(brand),
+            onTap: () => onChanged(member),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: AppSpace.m - 2),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -269,8 +265,8 @@ class _ModeToggle extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpace.xs),
       decoration: BoxDecoration(color: AppTheme.onBrandAlpha(0.15), borderRadius: BorderRadius.circular(AppRadius.pill)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        item(false, Icons.person_rounded, 'Saya Kreator'),
-        item(true, Icons.storefront_rounded, 'Saya Brand'),
+        item(false, Icons.volunteer_activism_rounded, 'Saya Relawan'),
+        item(true, Icons.badge_rounded, 'Saya Member'),
       ]),
     );
   }

@@ -357,12 +357,12 @@ void main() {
       'x_brand_profil': (brand, () => HomeShell(user: User.fromJson(brand)), (t) => openTab(t, 'Profil')),
       'x_brand_topup': (brand, () => const TopupView(), null),
       'x_brand_buat_campaign': (brand, () => const CreateCampaignView(), null),
-      // Halaman login mode "Saya Brand".
-      'x_login_brand': (
+      // Halaman login mode "Saya Member".
+      'x_login_member': (
         null,
         () => const LoginView(),
         (t) async {
-          await t.tap(find.byKey(const Key('login-mode-brand')));
+          await t.tap(find.byKey(const Key('login-mode-member')));
           await t.pumpAndSettle();
         },
       ),
