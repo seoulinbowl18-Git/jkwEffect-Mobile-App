@@ -2136,74 +2136,92 @@ def _clean(v: str, field: str, max_len: int, min_len: int = 1) -> str:
 @api.post("/registrations")
 async def create_registration(
     request: Request,
-    jenis: str = Form(...), nik: str = Form(...), nama: str = Form(...), kota_lahir: str = Form(...),
-    tanggal_lahir: str = Form(...), jenis_kelamin: str = Form(...),
-    provinsi: str = Form(...), kabupaten: str = Form(...), kecamatan: str = Form(...), kelurahan: str = Form(...),
-    provinsi_id: str = Form(""), kabupaten_id: str = Form(""), kecamatan_id: str = Form(""), kelurahan_id: str = Form(""),
-    alamat: str = Form(...), status_pernikahan: str = Form(...), telepon: str = Form(...), email: str = Form(...),
-    referral: str = Form(""), persetujuan: str = Form(...), ktp: UploadFile = File(...),
+    jenis: str = Form(...), nama: str = Form(...), telepon: str = Form(...), persetujuan: str = Form(...),
+    kabupaten: str = Form(""), provinsi: str = Form(""), provinsi_id: str = Form(""), kabupaten_id: str = Form(""),
+    email: str = Form(""), referral: str = Form(""),
+    # Wajib untuk Member (KTA resmi); tidak diminta di formulir Relawan.
+    nik: str = Form(""), kota_lahir: str = Form(""), tanggal_lahir: str = Form(""), jenis_kelamin: str = Form(""),
+    kecamatan: str = Form(""), kelurahan: str = Form(""), kecamatan_id: str = Form(""), kelurahan_id: str = Form(""),
+    alamat: str = Form(""), status_pernikahan: str = Form(""),
+    ktp: Optional[UploadFile] = File(None),
     user=Depends(get_user),
 ):
+    """Member: data lengkap sesuai KTP + foto KTP wajib. Relawan: cukup nama, WhatsApp, kab/kota (foto KTP opsional)."""
     if jenis not in REG_JENIS:
         raise HTTPException(422, "Jenis pendaftaran tidak dikenal")
+    member = jenis == "anggota"
     if persetujuan.lower() not in ("true", "1", "ya", "on"):
         raise HTTPException(422, "Pernyataan persetujuan wajib dicentang")
-    if not re.fullmatch(r"\d{16}", nik or ""):
-        raise HTTPException(422, "NIK harus 16 digit angka")
-    try:
-        lahir = datetime.strptime(tanggal_lahir, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    except ValueError:
-        raise HTTPException(422, "Tanggal lahir tidak valid")
-    umur = (now() - lahir).days / 365.25
-    if umur < 17 or umur > 120:
-        raise HTTPException(422, "Usia pendaftar minimal 17 tahun")
-    if jenis_kelamin not in REG_GENDER:
-        raise HTTPException(422, "Jenis kelamin tidak valid")
-    if status_pernikahan not in REG_NIKAH:
-        raise HTTPException(422, "Status pernikahan tidak valid")
+    if member:
+        if not re.fullmatch(r"\d{16}", nik or ""):
+            raise HTTPException(422, "NIK harus 16 digit angka")
+        try:
+            lahir = datetime.strptime(tanggal_lahir, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(422, "Tanggal lahir tidak valid")
+        umur = (now() - lahir).days / 365.25
+        if umur < 17 or umur > 120:
+            raise HTTPException(422, "Usia pendaftar minimal 17 tahun")
+        if jenis_kelamin not in REG_GENDER:
+            raise HTTPException(422, "Jenis kelamin tidak valid")
+        if status_pernikahan not in REG_NIKAH:
+            raise HTTPException(422, "Status pernikahan tidak valid")
     tel = re.sub(r"[\s-]", "", telepon or "")
     if not re.fullmatch(r"(\+62|62|0)8\d{7,12}", tel):
         raise HTTPException(422, "Nomor WhatsApp tidak valid")
     tel = "62" + re.sub(r"^(\+62|62|0)", "", tel)
-    email = (email or "").strip().lower()
+    email = (email or user.get("email") or "").strip().lower()
     if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email) or len(email) > 120:
         raise HTTPException(422, "Email tidak valid")
     referral = (referral or "").strip()
     if referral and not re.fullmatch(r"[A-Za-z0-9_-]{3,32}", referral):
         raise HTTPException(422, "Kode referral tidak valid")
     doc = {
-        "jenis": jenis, "nik": nik, "nama": _clean(nama, "Nama", 100, 3), "kota_lahir": _clean(kota_lahir, "Kota kelahiran", 60),
-        "tanggal_lahir": tanggal_lahir, "jenis_kelamin": jenis_kelamin,
-        "provinsi": _clean(provinsi, "Provinsi", 80), "kabupaten": _clean(kabupaten, "Kabupaten/Kota", 80),
-        "kecamatan": _clean(kecamatan, "Kecamatan", 80), "kelurahan": _clean(kelurahan, "Kelurahan/Desa", 80),
-        "wilayah_id": {"provinsi": provinsi_id[:16], "kabupaten": kabupaten_id[:16],
-                       "kecamatan": kecamatan_id[:16], "kelurahan": kelurahan_id[:16]},
-        "alamat": _clean(alamat, "Alamat lengkap", 300, 10), "status_pernikahan": status_pernikahan,
+        "jenis": jenis, "nama": _clean(nama, "Nama", 100, 3),
+        "kabupaten": _clean(kabupaten, "Kabupaten/Kota", 80),
+        "provinsi": _clean(provinsi, "Provinsi", 80) if (member or provinsi.strip()) else "",
+        "wilayah_id": {"provinsi": provinsi_id[:16], "kabupaten": kabupaten_id[:16]},
         "telepon": tel, "email": email, "referral": referral.upper(),
     }
+    if member:
+        # NIK hanya disimpan untuk Member (tanpa field `nik` untuk Relawan → indeks unik parsial tidak bentrok).
+        doc.update({
+            "nik": nik, "kota_lahir": _clean(kota_lahir, "Kota kelahiran", 60),
+            "tanggal_lahir": tanggal_lahir, "jenis_kelamin": jenis_kelamin,
+            "kecamatan": _clean(kecamatan, "Kecamatan", 80), "kelurahan": _clean(kelurahan, "Kelurahan/Desa", 80),
+            "alamat": _clean(alamat, "Alamat lengkap", 300, 10), "status_pernikahan": status_pernikahan,
+        })
+        doc["wilayah_id"].update({"kecamatan": kecamatan_id[:16], "kelurahan": kelurahan_id[:16]})
+    if member and not ktp:
+        raise HTTPException(422, "Foto KTP wajib diunggah untuk pendaftaran member")
     # Pendaftaran yang ditolak boleh dikirim ulang: data lama milik akun ini (dan foto KTP-nya) diganti.
     mine = await db.registrations.find_one({"user_id": user["user_id"], "jenis": jenis},
                                            {"_id": 0, "registration_id": 1, "status": 1, "ktp_upload_id": 1})
     if mine and mine.get("status") != "ditolak":
         raise HTTPException(409, f"Akun ini sudah mendaftar sebagai {REG_LABEL[jenis]}")
-    other = await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 0, "registration_id": 1})
-    if other and (not mine or other["registration_id"] != mine["registration_id"]):
-        raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {REG_LABEL[jenis]}")
+    if member:
+        other = await db.registrations.find_one({"nik": nik, "jenis": jenis}, {"_id": 0, "registration_id": 1})
+        if other and (not mine or other["registration_id"] != mine["registration_id"]):
+            raise HTTPException(409, f"NIK ini sudah terdaftar sebagai {REG_LABEL[jenis]}")
 
-    data = await ktp.read(KTP_MAX_BYTES + 1)
-    if len(data) > KTP_MAX_BYTES:
-        raise HTTPException(413, "Ukuran foto KTP maksimal 3 MB")
-    ctype = sniff_image(data)
-    if not ctype:
-        raise HTTPException(400, "Foto KTP harus JPG, PNG, atau WebP")
-    upload_id = gen_id("ktp")
-    rid = gen_id("reg")
+    upload_id = None
     ts = iso()
-    await db.uploads.insert_one({"upload_id": upload_id, "owner_id": user["user_id"], "content_type": ctype, "kind": "ktp",
-                                 "size": len(data), "data": data, "created_at": ts})
+    if ktp is not None and (ktp.filename or member):
+        data = await ktp.read(KTP_MAX_BYTES + 1)
+        if member or data:
+            if len(data) > KTP_MAX_BYTES:
+                raise HTTPException(413, "Ukuran foto KTP maksimal 3 MB")
+            ctype = sniff_image(data)
+            if not ctype:
+                raise HTTPException(400, "Foto KTP harus JPG, PNG, atau WebP")
+            upload_id = gen_id("ktp")
+            await db.uploads.insert_one({"upload_id": upload_id, "owner_id": user["user_id"], "content_type": ctype,
+                                         "kind": "ktp", "size": len(data), "data": data, "created_at": ts})
+    rid = gen_id("reg")
     doc.update({"registration_id": rid, "user_id": user["user_id"], "account_email": user.get("email"),
-                "ktp_upload_id": upload_id, "status": "menunggu verifikasi", "persetujuan_at": ts,
-                "created_at": ts, "updated_at": ts})
+                "status": "menunggu verifikasi", "persetujuan_at": ts, "created_at": ts, "updated_at": ts})
+    if upload_id:
+        doc["ktp_upload_id"] = upload_id
     if mine:
         await db.registrations.delete_one({"registration_id": mine["registration_id"], "status": "ditolak"})
         if mine.get("ktp_upload_id"):
@@ -2211,7 +2229,8 @@ async def create_registration(
     try:
         await db.registrations.insert_one(doc)
     except DuplicateKeyError:
-        await db.uploads.delete_one({"upload_id": upload_id})
+        if upload_id:
+            await db.uploads.delete_one({"upload_id": upload_id})
         raise HTTPException(409, "Data ini sudah terdaftar")
     return _reg_out({k: v for k, v in doc.items() if k in REG_PUBLIC})
 
@@ -2355,7 +2374,13 @@ async def startup():
     await db.uploads.create_index("upload_id", unique=True)
     await db.registrations.create_index("registration_id", unique=True)
     await db.registrations.create_index([("user_id", 1), ("jenis", 1)], unique=True)
-    await db.registrations.create_index([("jenis", 1), ("nik", 1)], unique=True)
+    # NIK unik per jenis, hanya untuk dokumen yang punya NIK (Relawan tidak menyimpan NIK).
+    # Indeks lama (non-parsial) dihapus sekali agar Relawan tanpa NIK tidak saling bentrok.
+    idx = await db.registrations.index_information()
+    if "jenis_1_nik_1" in idx and not idx["jenis_1_nik_1"].get("partialFilterExpression"):
+        await db.registrations.drop_index("jenis_1_nik_1")
+    await db.registrations.create_index([("jenis", 1), ("nik", 1)], unique=True, name="jenis_1_nik_1",
+                                        partialFilterExpression={"nik": {"$type": "string"}})
     await db.registrations.create_index([("status", 1), ("created_at", -1)])
     await db.registrations.create_index("kta_number", unique=True, sparse=True)
     if RECONCILE_SECONDS > 0 and komerce_configured():

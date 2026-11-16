@@ -148,3 +148,54 @@ def test_rejected_can_resubmit_and_others_cannot_approve(env):
     assert env.portal.call(server.db.uploads.count_documents, {"kind": "ktp"}) == 1
     lst = env.get("/api/admin/registrations", headers=H["admin_1"]).json()
     assert lst["counts"] == {"menunggu verifikasi": 1, "diterima": 0, "ditolak": 0}
+
+
+RELAWAN = {"jenis": "relawan", "nama": "Rina Relawan", "telepon": "0812-1111-2222", "provinsi": "JAWA TENGAH",
+           "provinsi_id": "33", "kabupaten": "KOTA SURAKARTA", "kabupaten_id": "3372", "persetujuan": "true"}
+
+
+def test_relawan_ringkas_tanpa_nik_dan_ktp(env):
+    r = env.post("/api/registrations", data=RELAWAN, headers=H["warga_1"])
+    assert r.status_code == 200, r.text
+    assert "nik_masked" not in r.json()
+    r2 = env.post("/api/registrations", data={**RELAWAN, "nama": "Raka Relawan"}, headers=H["warga_2"])
+    assert r2.status_code == 200, r2.text  # dua relawan tanpa NIK tidak bentrok di indeks unik
+    saved = env.portal.call(server.db.registrations.find_one, {"user_id": "warga_1"})
+    assert "nik" not in saved and "ktp_upload_id" not in saved and "alamat" not in saved
+    assert saved["email"] == "warga_1@x.id"  # email diambil dari akun Google bila tidak dikirim
+    assert saved["telepon"] == "6281211112222" and saved["kabupaten"] == "KOTA SURAKARTA"
+    kta = env.patch(f"/api/admin/registrations/{r.json()['registration_id']}", json={"status": "diterima"}, headers=H["admin_1"]).json()
+    assert kta["kta_number"] == "G2029-R-33-000001"
+
+
+def test_relawan_wajib_nama_telepon_kabupaten(env):
+    assert env.post("/api/registrations", data={**RELAWAN, "telepon": "123"}, headers=H["warga_1"]).status_code == 422
+    assert env.post("/api/registrations", data={**RELAWAN, "kabupaten": ""}, headers=H["warga_1"]).status_code == 422
+    assert env.post("/api/registrations", data={**RELAWAN, "nama": "A"}, headers=H["warga_1"]).status_code == 422
+    assert env.post("/api/registrations", data={**RELAWAN, "persetujuan": "false"}, headers=H["warga_1"]).status_code == 422
+
+
+def test_relawan_ktp_opsional_tetap_divalidasi(env):
+    bad = env.post("/api/registrations", data=RELAWAN, files={"ktp": ("k.pdf", b"%PDF-1", "application/pdf")}, headers=H["warga_1"])
+    assert bad.status_code == 400
+    ok = env.post("/api/registrations", data=RELAWAN, files={"ktp": ("k.jpg", JPG, "image/jpeg")}, headers=H["warga_1"])
+    assert ok.status_code == 200
+    saved = env.portal.call(server.db.registrations.find_one, {"user_id": "warga_1"})
+    assert saved.get("ktp_upload_id")
+
+
+def test_member_tetap_wajib_ktp_dan_data_lengkap(env):
+    r = env.post("/api/registrations", data=FORM, headers=H["warga_1"])  # tanpa foto KTP
+    assert r.status_code == 422 and "KTP" in r.json()["detail"]
+    assert daftar(env, nik="").status_code == 422
+    assert daftar(env, alamat="").status_code == 422
+
+
+def test_startup_migrasi_indeks_nik_lama_ke_parsial():
+    server.db = AsyncMongoMockClient()["test_registrations_idx"]
+    import asyncio
+    asyncio.run(server.db.registrations.create_index([("jenis", 1), ("nik", 1)], unique=True))  # indeks versi lama
+    with TestClient(server.app) as c:
+        idx = c.portal.call(server.db.registrations.index_information)
+        assert idx["jenis_1_nik_1"].get("partialFilterExpression") == {"nik": {"$type": "string"}}
+        assert idx["jenis_1_nik_1"].get("unique")
