@@ -98,8 +98,14 @@ PLATFORM_DOMAINS = {
     "instagram": ["instagram.com"],
     "threads": ["threads.net", "threads.com"],
     "youtube": ["youtube.com", "youtu.be"],
+    "facebook": ["facebook.com", "fb.com", "fb.watch"],
 }
-CATEGORIES = ["Produk", "Beauty", "Lifestyle", "F&B", "Edukasi", "Hiburan", "Fashion", "Tech"]
+CATEGORIES = ["Produk", "Beauty", "Lifestyle", "F&B", "Edukasi", "Hiburan", "Fashion", "Tech"]  # campaign brand lama
+# Campaign gerakan GIBRAN2029 (dibuat Admin Pusat): tanpa brand, rate, budget, dan minimal views.
+GERAKAN_CATEGORIES = ["Agenda", "Sebar Narasi", "Aksi Sosial", "Penggalangan Dukungan"]
+TARGET_AKSI = {"share": "Share", "forward": "Forward", "komentar": "Komentar", "kehadiran": "Kehadiran Acara"}
+Platform = Literal["tiktok", "instagram", "threads", "youtube", "facebook"]
+TargetAksi = Literal["share", "forward", "komentar", "kehadiran"]
 
 
 def now():
@@ -920,7 +926,7 @@ def streak_info(post_dates):
 class CampaignIn(BaseModel):
     title: str = Field(min_length=3, max_length=120)
     category: str
-    platforms: List[Literal["tiktok", "instagram", "threads", "youtube"]] = Field(min_length=1)
+    platforms: List[Platform] = Field(min_length=1)
     rate_per_1k: int = Field(ge=500, le=1000000)
     min_views: int = Field(ge=100, le=100000000)
     budget: int = Field(ge=100000)
@@ -1101,7 +1107,7 @@ async def creator_counts(campaign_ids):
 # ---------------- Submissions ----------------
 class SubmissionIn(BaseModel):
     campaign_id: str
-    platform: Literal["tiktok", "instagram", "threads", "youtube"]
+    platform: Platform
     video_url: str = Field(max_length=500)
 
 
@@ -1390,7 +1396,8 @@ async def verify_views(sid: str, body: VerifyIn, user=Depends(require_owner)):
         await add_ledger(s["creator_id"], "earning", amount, sid,
                          f"{s['campaign_title']} · {body.verified_views:,} views".replace(",", "."))
     c = await db.campaigns.find_one({"campaign_id": s["campaign_id"]}, {"_id": 0})
-    if c["spent"] >= c["budget"] and c["status"] == "active":
+    # Tutup otomatis hanya untuk campaign berbudget (campaign aksi gerakan tidak punya budget).
+    if c.get("budget", 0) > 0 and c["spent"] >= c["budget"] and c["status"] == "active":
         await db.campaigns.update_one({"campaign_id": c["campaign_id"]}, {"$set": {"status": "closed"}})
         await reject_open_submissions(c["campaign_id"], exclude=sid)
     await notify(s["creator_id"], s["campaign_title"], f"Views terverifikasi! +Rp {amount:,}".replace(",", "."), "success")
@@ -1825,43 +1832,33 @@ def rupiah(n):
     return f"Rp {int(n):,}".replace(",", ".")
 
 
-class OwnerCampaignIn(CampaignIn):
-    brand_id: str
-    charge_brand: bool = False  # True: budget is taken from the brand balance; False: funded by the Owner
+class OwnerCampaignIn(BaseModel):
+    """Campaign gerakan (aksi relawan) buatan Admin Pusat."""
+    title: str = Field(min_length=3, max_length=120)
+    category: str
+    platforms: List[Platform] = Field(min_length=1)
+    target_actions: List[TargetAksi] = Field(min_length=1)
+    thumbnail: Optional[str] = Field(default="", max_length=500)
+    instructions: str = Field(min_length=10, max_length=5000)
+    exclusive: bool = False
+    deadline_days: int = Field(default=30, ge=1, le=180)
 
 
 @api.post("/admin/campaigns")
 async def owner_create_campaign(body: OwnerCampaignIn, owner=Depends(require_owner)):
-    if body.category not in CATEGORIES:
+    if body.category not in GERAKAN_CATEGORIES:
         raise HTTPException(400, "Kategori tidak valid")
-    brand = await db.users.find_one({"user_id": body.brand_id, "role": "brand"}, {"_id": 0})
-    if not brand:
-        raise HTTPException(404, "Brand tidak ditemukan")
-    if brand.get("status") == "suspended":
-        raise HTTPException(400, "Brand sedang ditangguhkan")
-    if body.charge_brand:
-        res = await db.users.find_one_and_update(
-            {"user_id": brand["user_id"], "brand_balance": {"$gte": body.budget}},
-            {"$inc": {"brand_balance": -body.budget}})
-        if not res:
-            raise HTTPException(400, f"Saldo brand tidak cukup ({rupiah(brand.get('brand_balance', 0))})")
     d = body.model_dump()
     days = d.pop("deadline_days")
-    d.pop("brand_id"), d.pop("charge_brand")
-    c = {**d, "campaign_id": gen_id("cmp"), "brand_id": brand["user_id"],
-         "brand_name": brand.get("profile", {}).get("brand_name") or brand["name"],
-         "spent": 0, "submission_count": 0, "total_views": 0, "status": "active",
-         "funded_by": "brand" if body.charge_brand else "owner", "created_by": owner["user_id"],
-         "deadline": (now() + timedelta(days=days)).isoformat(), "created_at": iso()}
+    d["target_actions"] = list(dict.fromkeys(d["target_actions"]))
+    c = {**d, "campaign_id": gen_id("cmp"), "kind": "aksi", "brand_id": "gibran2029", "brand_name": "GIBRAN2029",
+         # Tidak ada sistem bayar per views: field lama diisi 0 agar aplikasi versi lama tetap bisa membaca campaign.
+         "rate_per_1k": 0, "min_views": 0, "budget": 0, "spent": 0,
+         "submission_count": 0, "total_views": 0, "status": "active", "funded_by": "owner",
+         "created_by": owner["user_id"], "deadline": (now() + timedelta(days=days)).isoformat(), "created_at": iso()}
     await db.campaigns.insert_one(c)
-    if body.charge_brand:
-        await db.ledger.insert_one({"entry_id": gen_id("led"), "user_id": brand["user_id"], "type": "campaign_budget",
-                                    "amount": -body.budget, "ref": c["campaign_id"], "note": "Dibuat oleh Owner",
-                                    "created_at": iso()})
-    await notify(brand["user_id"], "Campaign baru dibuat Owner",
-                 f"{c['title']} sudah aktif" + (f" (budget {rupiah(body.budget)} dari saldo brand)" if body.charge_brand else ""))
-    await audit(owner, "campaign.create", c["title"], {"campaign_id": c["campaign_id"], "brand": c["brand_name"],
-                                                         "budget": body.budget, "funded_by": c["funded_by"]})
+    await audit(owner, "campaign.create", c["title"], {"campaign_id": c["campaign_id"], "category": c["category"],
+                                                         "target_actions": c["target_actions"]})
     c.pop("_id", None)
     return campaign_view(c)
 
@@ -1869,10 +1866,8 @@ async def owner_create_campaign(body: OwnerCampaignIn, owner=Depends(require_own
 class OwnerCampaignUpdate(BaseModel):
     title: str = Field(min_length=3, max_length=120)
     category: str
-    platforms: List[Literal["tiktok", "instagram", "threads", "youtube"]] = Field(min_length=1)
-    rate_per_1k: int = Field(ge=500, le=1000000)
-    min_views: int = Field(ge=100, le=100000000)
-    budget: int = Field(ge=100000)
+    platforms: List[Platform] = Field(min_length=1)
+    target_actions: Optional[List[TargetAksi]] = None
     thumbnail: Optional[str] = Field(default="", max_length=500)
     instructions: str = Field(min_length=10, max_length=5000)
     exclusive: bool = False
@@ -1881,56 +1876,34 @@ class OwnerCampaignUpdate(BaseModel):
 
 @api.put("/admin/campaigns/{cid}")
 async def owner_update_campaign(cid: str, body: OwnerCampaignUpdate, owner=Depends(require_owner)):
-    if body.category not in CATEGORIES:
-        raise HTTPException(400, "Kategori tidak valid")
+    """Ubah judul, kategori, platform, target aksi, banner, instruksi, exclusive, tanggal tutup.
+    Rate, budget, dan minimal views (campaign brand lama) tidak lagi diubah dari sini."""
     c = await db.campaigns.find_one({"campaign_id": cid, "deleted": {"$ne": True}}, {"_id": 0})
     if not c:
         raise HTTPException(404, "Campaign tidak ditemukan")
+    aksi = c.get("kind") == "aksi"
+    if body.category not in (GERAKAN_CATEGORIES if aksi else GERAKAN_CATEGORIES + CATEGORIES):
+        raise HTTPException(400, "Kategori tidak valid")
+    if aksi and not body.target_actions:
+        raise HTTPException(422, "Pilih minimal satu target aksi")
     if c["status"] == "closed":
         raise HTTPException(400, "Campaign sudah ditutup dan tidak bisa diubah")
-    if body.budget < c["spent"]:
-        raise HTTPException(400, f"Budget tidak boleh di bawah dana yang sudah terpakai ({rupiah(c['spent'])})")
-    upd = body.model_dump(exclude={"deadline"})
+    upd = body.model_dump(exclude={"deadline", "target_actions"})
+    if body.target_actions:
+        upd["target_actions"] = list(dict.fromkeys(body.target_actions))
     if body.deadline:
         try:
             dl = _as_utc(datetime.fromisoformat(body.deadline.replace("Z", "+00:00")))
         except ValueError:
             raise HTTPException(400, "Format tanggal tutup tidak valid")
         upd["deadline"] = dl.isoformat()
-    delta = body.budget - c["budget"]
-    charge = c.get("funded_by", "brand") != "owner"
-    # Raising the budget of a brand-funded campaign takes the difference from the brand balance first.
-    if delta > 0 and charge:
-        res = await db.users.find_one_and_update({"user_id": c["brand_id"], "brand_balance": {"$gte": delta}},
-                                                 {"$inc": {"brand_balance": -delta}})
-        if not res:
-            brand = await db.users.find_one({"user_id": c["brand_id"]}, {"_id": 0, "brand_balance": 1}) or {}
-            raise HTTPException(400, f"Saldo brand tidak cukup untuk menaikkan budget {rupiah(delta)} "
-                                     f"(saldo {rupiah(brand.get('brand_balance', 0))})")
-    # Only apply if nobody changed the budget/spending in between (verify_views also moves `spent`).
-    r = await db.campaigns.update_one(
-        {"campaign_id": cid, "budget": c["budget"], "status": {"$ne": "closed"}, "spent": {"$lte": body.budget}},
-        {"$set": {**upd, "updated_at": iso()}})
-    if not r.modified_count:
-        if delta > 0 and charge:
-            await db.users.update_one({"user_id": c["brand_id"]}, {"$inc": {"brand_balance": delta}})
-        raise HTTPException(409, "Campaign baru saja berubah. Muat ulang lalu coba lagi.")
-    if delta and charge:
-        if delta < 0:
-            await db.users.update_one({"user_id": c["brand_id"]}, {"$inc": {"brand_balance": -delta}})
-        await db.ledger.insert_one({"entry_id": gen_id("led"), "user_id": c["brand_id"],
-                                    "type": "campaign_budget" if delta > 0 else "campaign_refund", "amount": -delta,
-                                    "ref": cid, "note": "Budget diubah Owner", "created_at": iso()})
+    await db.campaigns.update_one({"campaign_id": cid}, {"$set": {**upd, "updated_at": iso()}})
     if body.title != c["title"]:
         await db.submissions.update_many({"campaign_id": cid}, {"$set": {"campaign_title": body.title}})
     changed = {k: {"from": c.get(k), "to": v} for k, v in upd.items() if c.get(k) != v and k not in ("instructions", "thumbnail")}
     for k in ("instructions", "thumbnail"):
         if c.get(k) != upd.get(k):
             changed[k] = "diubah"
-    if delta and charge:
-        await notify(c["brand_id"], "Budget campaign diubah Owner",
-                     f"{body.title}: {rupiah(c['budget'])} → {rupiah(body.budget)}. Saldo brand "
-                     + (f"dipotong {rupiah(delta)}" if delta > 0 else f"dikembalikan {rupiah(-delta)}"))
     await audit(owner, "campaign.edit", body.title, {"campaign_id": cid, **changed})
     return campaign_view(await db.campaigns.find_one({"campaign_id": cid}, {"_id": 0}))
 

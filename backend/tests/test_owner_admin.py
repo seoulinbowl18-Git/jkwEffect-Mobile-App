@@ -24,9 +24,10 @@ M = {"Authorization": "Bearer tok_mod"}  # moderation admin (Google), not owner
 B = {"Authorization": "Bearer tok_brand"}
 C = {"Authorization": "Bearer tok_creator"}
 
-CAMPAIGN = {"title": "Kopi Susu Viral", "category": "F&B", "platforms": ["tiktok"], "rate_per_1k": 5000,
-            "min_views": 1000, "budget": 1_000_000, "thumbnail": "", "instructions": "Buat video 30 detik.",
-            "exclusive": False}
+# Campaign gerakan (aksi relawan) buatan Owner: tanpa brand, rate, budget, minimal views.
+AKSI = {"title": "Sebarkan Video Kegiatan", "category": "Sebar Narasi", "platforms": ["tiktok", "facebook"],
+        "target_actions": ["share", "komentar"], "thumbnail": "", "instructions": "Bagikan video ke akunmu.",
+        "exclusive": False}
 
 
 @pytest.fixture()
@@ -57,15 +58,28 @@ def audit(c):
 
 
 def create(c, **kw):
-    r = c.post("/api/admin/campaigns", json={**CAMPAIGN, "brand_id": "brand", **kw}, headers=O)
+    r = c.post("/api/admin/campaigns", json={**AKSI, **kw}, headers=O)
     assert r.status_code == 200, r.text
     return r.json()
+
+
+def legacy(c, budget=1_000_000):
+    """Campaign brand lama (dibuat sebelum mode gerakan): budget sudah dipotong dari saldo brand."""
+    cid = server.gen_id("cmp")
+    c.portal.call(server.db.campaigns.insert_one, {
+        "campaign_id": cid, "brand_id": "brand", "brand_name": "Kopi Kita", "title": "Kopi Susu Viral", "category": "F&B",
+        "platforms": ["tiktok"], "rate_per_1k": 5000, "min_views": 1000, "budget": budget, "spent": 0, "thumbnail": "",
+        "instructions": "Buat video 30 detik.", "exclusive": False, "status": "active", "funded_by": "brand",
+        "submission_count": 0, "total_views": 0, "deadline": (server.now() + timedelta(days=30)).isoformat(),
+        "created_at": server.iso()})
+    c.portal.call(server.db.users.update_one, {"user_id": "brand"}, {"$inc": {"brand_balance": -budget}})
+    return cid
 
 
 # ---------------- access ----------------
 def test_owner_only_endpoints_reject_moderators_and_others(c):
     for h in (M, B, C):
-        assert c.post("/api/admin/campaigns", json={**CAMPAIGN, "brand_id": "brand"}, headers=h).status_code == 403
+        assert c.post("/api/admin/campaigns", json=AKSI, headers=h).status_code == 403
         assert c.patch("/api/admin/users/creator", json={"verified": True}, headers=h).status_code == 403
         assert c.post("/api/admin/users/creator/balance", json={"field": "balance", "delta": 1, "note": "abc"},
                       headers=h).status_code == 403
@@ -75,73 +89,59 @@ def test_owner_only_endpoints_reject_moderators_and_others(c):
 
 
 # ---------------- campaigns ----------------
-def test_create_charging_brand_deducts_balance_and_logs(c):
-    cmp = create(c, charge_brand=True)
-    assert cmp["funded_by"] == "brand" and cmp["status"] == "active" and cmp["brand_name"] == "Kopi Kita"
-    assert me(c, B)["brand_balance"] == 2_000_000
-    ledger = c.get("/api/admin/users/brand/ledger", headers=O).json()
-    assert ledger[0]["type"] == "campaign_budget" and ledger[0]["amount"] == -1_000_000
+def test_create_aksi_tanpa_brand_rate_budget(c):
+    cmp = create(c, rate_per_1k=5000, budget=1_000_000, brand_id="brand")  # field komersial lama diabaikan
+    assert cmp["kind"] == "aksi" and cmp["brand_name"] == "GIBRAN2029" and cmp["funded_by"] == "owner"
+    assert cmp["rate_per_1k"] == 0 and cmp["budget"] == 0 and cmp["min_views"] == 0 and cmp["budget_left_pct"] == 0
+    assert cmp["target_actions"] == ["share", "komentar"] and cmp["platforms"] == ["tiktok", "facebook"]
+    assert me(c, B)["brand_balance"] == 3_000_000  # saldo brand tidak tersentuh
     assert audit(c)[0]["action"] == "campaign.create"
-    assert any(x["campaign_id"] == cmp["campaign_id"] for x in c.get("/api/campaigns").json())  # live for everyone
+    assert any(x["campaign_id"] == cmp["campaign_id"] for x in c.get("/api/campaigns").json())  # tampil untuk semua
 
 
-def test_create_owner_funded_does_not_touch_brand_and_no_refund_on_close(c):
-    cmp = create(c)
-    assert cmp["funded_by"] == "owner" and me(c, B)["brand_balance"] == 3_000_000
-    assert c.patch(f"/api/campaigns/{cmp['campaign_id']}/status", json={"status": "closed"}, headers=O).json()["refund"] == 0
-    assert me(c, B)["brand_balance"] == 3_000_000
+def test_create_aksi_validasi(c):
+    assert c.post("/api/admin/campaigns", json={**AKSI, "category": "F&B"}, headers=O).status_code == 400
+    assert c.post("/api/admin/campaigns", json={**AKSI, "target_actions": []}, headers=O).status_code == 422
+    assert c.post("/api/admin/campaigns", json={**AKSI, "target_actions": ["views"]}, headers=O).status_code == 422
+    assert c.post("/api/admin/campaigns", json={**AKSI, "platforms": ["myspace"]}, headers=O).status_code == 422
+    for cat in server.GERAKAN_CATEGORIES:
+        assert c.post("/api/admin/campaigns", json={**AKSI, "category": cat}, headers=O).status_code == 200
 
 
-def test_create_rejects_insufficient_balance_unknown_or_suspended_brand(c):
-    r = c.post("/api/admin/campaigns", json={**CAMPAIGN, "brand_id": "brand", "budget": 5_000_000, "charge_brand": True}, headers=O)
-    assert r.status_code == 400 and "tidak cukup" in r.json()["detail"]
-    assert me(c, B)["brand_balance"] == 3_000_000
-    assert c.post("/api/admin/campaigns", json={**CAMPAIGN, "brand_id": "creator"}, headers=O).status_code == 404
-    c.patch("/api/admin/users/brand", json={"status": "suspended", "suspend_reason": "Spam"}, headers=O)
-    assert c.post("/api/admin/campaigns", json={**CAMPAIGN, "brand_id": "brand"}, headers=O).status_code == 400
-
-
-def test_update_budget_adjusts_brand_balance_both_ways(c):
-    cid = create(c, charge_brand=True)["campaign_id"]  # brand 2.000.000
-    body = {**CAMPAIGN, "title": "Kopi Susu Viral 2", "budget": 1_500_000, "deadline": "2030-01-31T16:59:00.000Z"}
+def test_update_aksi_dan_tutup_read_only(c):
+    cid = create(c)["campaign_id"]
+    body = {**AKSI, "title": "Hadiri Konsolidasi", "category": "Agenda", "target_actions": ["kehadiran"],
+            "deadline": "2030-01-31T16:59:00.000Z"}
     r = c.put(f"/api/admin/campaigns/{cid}", json=body, headers=O)
     assert r.status_code == 200, r.text
-    assert r.json()["budget"] == 1_500_000 and r.json()["deadline"].startswith("2030-01-31")
-    assert me(c, B)["brand_balance"] == 1_500_000
-    r = c.put(f"/api/admin/campaigns/{cid}", json={**body, "budget": 400_000}, headers=O)
-    assert r.status_code == 200
-    assert me(c, B)["brand_balance"] == 2_600_000
-    types = [x["type"] for x in c.get("/api/admin/users/brand/ledger", headers=O).json()]
-    assert types[:3] == ["campaign_refund", "campaign_budget", "campaign_budget"]
-    a = audit(c)[0]
-    assert a["action"] == "campaign.edit" and a["detail"]["budget"] == {"from": 1_500_000, "to": 400_000}
-
-
-def test_update_budget_increase_needs_brand_balance(c):
-    cid = create(c, charge_brand=True)["campaign_id"]  # brand 2.000.000
-    r = c.put(f"/api/admin/campaigns/{cid}", json={**CAMPAIGN, "budget": 4_000_000}, headers=O)
-    assert r.status_code == 400 and "tidak cukup" in r.json()["detail"]
-    assert me(c, B)["brand_balance"] == 2_000_000
-    assert c.get(f"/api/campaigns/{cid}").json()["budget"] == 1_000_000
-
-
-def test_update_owner_funded_budget_never_touches_brand(c):
-    cid = create(c)["campaign_id"]
-    assert c.put(f"/api/admin/campaigns/{cid}", json={**CAMPAIGN, "budget": 9_000_000}, headers=O).status_code == 200
-    assert me(c, B)["brand_balance"] == 3_000_000
-
-
-def test_budget_cannot_go_below_spent_and_closed_is_read_only(c):
-    cid = create(c, charge_brand=True)["campaign_id"]
-    c.portal.call(server.db.campaigns.update_one, {"campaign_id": cid}, {"$set": {"spent": 300_000}})
-    r = c.put(f"/api/admin/campaigns/{cid}", json={**CAMPAIGN, "budget": 200_000}, headers=O)
-    assert r.status_code == 422 or (r.status_code == 400 and "terpakai" in r.json()["detail"])
+    assert r.json()["target_actions"] == ["kehadiran"] and r.json()["deadline"].startswith("2030-01-31")
+    assert c.put(f"/api/admin/campaigns/{cid}", json={**body, "target_actions": []}, headers=O).status_code == 422
+    assert audit(c)[0]["action"] == "campaign.edit"
     c.patch(f"/api/admin/campaigns/{cid}/status", json={"status": "closed"}, headers=O)
-    assert c.put(f"/api/admin/campaigns/{cid}", json=CAMPAIGN, headers=O).status_code == 400
+    assert c.put(f"/api/admin/campaigns/{cid}", json=body, headers=O).status_code == 400
+
+
+def test_update_campaign_brand_lama_tidak_mengubah_budget(c):
+    cid = legacy(c)  # brand 2.000.000
+    r = c.put(f"/api/admin/campaigns/{cid}", json={**AKSI, "category": "F&B", "target_actions": None, "budget": 9_000_000}, headers=O)
+    assert r.status_code == 200, r.text
+    assert r.json()["budget"] == 1_000_000 and me(c, B)["brand_balance"] == 2_000_000
+
+
+def test_aksi_tidak_tertutup_otomatis_setelah_setoran_disetujui(c):
+    cid = create(c)["campaign_id"]
+    c.portal.call(server.db.submissions.insert_one, {
+        "submission_id": "sub_a", "campaign_id": cid, "campaign_title": AKSI["title"], "brand_id": "gibran2029",
+        "creator_id": "creator", "creator_name": "Ani", "platform": "tiktok", "video_url": "https://tiktok.com/@a/video/9",
+        "status": "diproses", "claimed_views": 10, "verified_views": 0, "payout": 0, "rate_per_1k": 0, "min_views": 0, "note": ""})
+    r = c.post("/api/submissions/sub_a/verify", json={"action": "approve", "verified_views": 10}, headers=O)
+    assert r.status_code == 200, r.text
+    assert r.json()["payout"] == 0
+    assert c.get(f"/api/campaigns/{cid}").json()["status"] == "active"
 
 
 def test_pause_resume_close_refunds_unspent(c):
-    cid = create(c, charge_brand=True)["campaign_id"]
+    cid = legacy(c)
     c.portal.call(server.db.campaigns.update_one, {"campaign_id": cid}, {"$set": {"spent": 250_000}})
     assert c.patch(f"/api/admin/campaigns/{cid}/status", json={"status": "paused"}, headers=O).status_code == 200
     assert not any(x["campaign_id"] == cid for x in c.get("/api/campaigns").json())
@@ -152,7 +152,7 @@ def test_pause_resume_close_refunds_unspent(c):
 
 
 def test_delete_closes_refunds_and_hides(c):
-    cid = create(c, charge_brand=True)["campaign_id"]
+    cid = legacy(c)
     r = c.delete(f"/api/admin/campaigns/{cid}", headers=O)
     assert r.status_code == 200 and r.json()["refund"] == 1_000_000
     assert me(c, B)["brand_balance"] == 3_000_000
@@ -218,8 +218,8 @@ def test_owner_withdrawal_approval_is_audited_and_bumps_sync(c):
 
 def test_every_owner_write_bumps_sync(c):
     v = c.get("/api/sync").json()["v"]
-    cid = create(c, charge_brand=True)["campaign_id"]
-    for call in (lambda: c.put(f"/api/admin/campaigns/{cid}", json=CAMPAIGN, headers=O),
+    cid = create(c)["campaign_id"]
+    for call in (lambda: c.put(f"/api/admin/campaigns/{cid}", json=AKSI, headers=O),
                  lambda: c.patch(f"/api/admin/campaigns/{cid}/status", json={"status": "paused"}, headers=O),
                  lambda: c.patch("/api/admin/users/creator", json={"verified": True}, headers=O),
                  lambda: c.post("/api/admin/users/creator/balance", json={"field": "balance", "delta": 1, "note": "abc"}, headers=O),
@@ -228,3 +228,9 @@ def test_every_owner_write_bumps_sync(c):
         nv = c.get("/api/sync").json()["v"]
         assert nv > v
         v = nv
+
+
+def test_link_facebook_valid():
+    assert server.valid_url("https://www.facebook.com/share/v/abc", "facebook")
+    assert server.valid_url("https://fb.watch/xyz", "facebook")
+    assert not server.valid_url("https://tiktok.com/@a/video/1", "facebook")
