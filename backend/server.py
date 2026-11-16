@@ -26,8 +26,28 @@ from datetime import datetime, timezone, timedelta
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
+# ---------------- Database ----------------
+# GIBRAN2029 memakai database MongoDB sendiri, terpisah dari data OurBuzzer lama.
+# URI: MONGODB_URI (disarankan) atau MONGO_URL (nama lama, tetap didukung).
+# Nama database: DB_NAME; bila kosong diambil dari path URI (…mongodb.net/<nama>?…), lalu default "gibran2029_db".
+DEFAULT_DB_NAME = "gibran2029_db"
+LEGACY_DB_NAMES = {"ourbuzzer", "trybuzzer"}
+
+
+def resolve_mongo_config(env=os.environ):
+    uri = (env.get("MONGODB_URI") or env.get("MONGO_URL") or "").strip()
+    if not uri:
+        raise RuntimeError("Set MONGODB_URI (atau MONGO_URL) ke connection string MongoDB.")
+    name = (env.get("DB_NAME") or "").strip()
+    if not name:
+        path = urlparse(uri).path.strip("/")
+        name = path.split("/")[0] if path else ""
+    return uri, name or DEFAULT_DB_NAME
+
+
+MONGO_URI, DB_NAME = resolve_mongo_config()
+client = AsyncIOMotorClient(MONGO_URI)
+db = client[DB_NAME]
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', '').lower()
 EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 MIN_WITHDRAW = 50000
@@ -65,7 +85,7 @@ USER_PUBLIC = {"_id": 0, "password_hash": 0}
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
-logger = logging.getLogger("trybuzzer")
+logger = logging.getLogger("gibran2029")
 logging.basicConfig(level=logging.INFO)
 # httpx logs every request URL at INFO; Telegram Bot API URLs contain the bot token
 # (https://api.telegram.org/bot<TOKEN>/...), so keep httpx/httpcore quiet.
@@ -2350,6 +2370,11 @@ SEED_INSTR = ("1. Buat video 15-60 detik yang menampilkan produk secara natural.
 
 @app.on_event("startup")
 async def startup():
+    if DB_NAME.lower() in LEGACY_DB_NAMES:
+        logger.warning("Database '%s' adalah database lama OurBuzzer. Set DB_NAME=%s agar data GIBRAN2029 terpisah.",
+                       DB_NAME, DEFAULT_DB_NAME)
+    else:
+        logger.info("Database MongoDB: %s", DB_NAME)
     await db.users.create_index("user_id", unique=True)
     await db.users.create_index("email", unique=True)
     await db.admin_otps.create_index("phone", unique=True)
@@ -2393,7 +2418,9 @@ async def startup():
     await db.platform_revenue.create_index("created_at")
     if CAMPAIGN_EXPIRY_CHECK_SECONDS > 0:
         app.state.expiry = asyncio.create_task(_campaign_expiry_loop())
-    if await db.campaigns.count_documents({}) == 0:
+    # Campaign demo lama (OurBuzzer/TryBuzzer) TIDAK lagi diisi otomatis ke database baru.
+    # Aktifkan hanya untuk pengembangan lokal: SEED_DEMO_DATA=true.
+    if os.environ.get("SEED_DEMO_DATA", "").lower() in ("1", "true", "yes") and await db.campaigns.count_documents({}) == 0:
         brand_id = "user_demobrand"
         await db.users.update_one({"user_id": brand_id}, {"$setOnInsert": {
             "user_id": brand_id, "email": "demo-brand@trybuzzer.local", "name": "Demo Brand", "picture": None,
