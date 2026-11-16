@@ -30,7 +30,8 @@ enum VideoPlatform {
   tiktok('tiktok', 'TikTok'),
   instagram('instagram', 'Instagram'),
   threads('threads', 'Threads'),
-  youtube('youtube', 'YouTube');
+  youtube('youtube', 'YouTube'),
+  facebook('facebook', 'Facebook');
 
   const VideoPlatform(this.wire, this.label);
   final String wire;

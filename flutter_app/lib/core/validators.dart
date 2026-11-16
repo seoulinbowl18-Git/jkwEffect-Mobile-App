@@ -7,6 +7,7 @@ const Map<VideoPlatform, List<String>> _platformDomains = {
   VideoPlatform.instagram: ['instagram.com'],
   VideoPlatform.threads: ['threads.net', 'threads.com'],
   VideoPlatform.youtube: ['youtube.com', 'youtu.be'],
+  VideoPlatform.facebook: ['facebook.com', 'fb.com', 'fb.watch'],
 };
 
 final _urlRe = RegExp(r'^https?://([^/]+)/\S+$');

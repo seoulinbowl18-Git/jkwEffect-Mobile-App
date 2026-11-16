@@ -8,6 +8,7 @@ extension VideoPlatformIcon on VideoPlatform {
         VideoPlatform.instagram => Icons.camera_alt_rounded,
         VideoPlatform.threads => Icons.alternate_email_rounded,
         VideoPlatform.youtube => Icons.play_circle_fill_rounded,
+        VideoPlatform.facebook => Icons.facebook_rounded,
       };
 }
 

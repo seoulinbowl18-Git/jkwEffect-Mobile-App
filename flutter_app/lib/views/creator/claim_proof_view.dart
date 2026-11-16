@@ -45,6 +45,11 @@ const proofGuides = <VideoPlatform, List<String>>{
     'Ketuk "Analytics" / "Analitik".',
     'Tampilkan Penayangan, Waktu tonton, dan Durasi rata-rata penayangan.',
   ],
+  VideoPlatform.facebook: [
+    'Buka Facebook, masuk ke Profil/Halaman, lalu buka postingan yang kamu daftarkan.',
+    'Ketuk "Lihat insight" / "Dasbor profesional" di bawah postingan.',
+    'Tampilkan jumlah Tayangan, Jangkauan, dan Interaksi (bagikan & komentar).',
+  ],
 };
 
 const proofMustShow = [
