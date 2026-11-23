@@ -2367,6 +2367,117 @@ async def _maybe_migrate_legacy_db():
         logger.exception("Migrasi dari %s gagal", source)
 
 
+# ---------------- Kehadiran Acara: pindai barcode KTA ----------------
+# Barcode KTA (Code 128) berisi nomor KTA. Admin memindainya di lokasi untuk memverifikasi KTA dan,
+# bila acara dipilih, mencatat kehadiran pada campaign gerakan bertarget aksi "kehadiran".
+ATTENDANCE_REG_FIELDS = ("registration_id", "user_id", "jenis", "nama", "kta_number", "kta_issued_at",
+                         "kabupaten", "provinsi", "kecamatan", "kelurahan")
+
+
+def _norm_kta(number: str) -> str:
+    n = re.sub(r"\s+", "", (number or "")).upper()
+    if not re.fullmatch(r"[A-Z0-9-]{4,40}", n):
+        raise HTTPException(422, "Nomor KTA tidak valid")
+    return n
+
+
+async def _kta_lookup(number: str) -> dict:
+    """Cari pendaftaran dari nomor KTA. 404 bila tidak ada; `valid` False bila pendaftaran tidak disetujui."""
+    n = _norm_kta(number)
+    reg = await db.registrations.find_one({"kta_number": n}, {"_id": 0, **{f: 1 for f in ATTENDANCE_REG_FIELDS}, "status": 1})
+    if not reg:
+        raise HTTPException(404, f"KTA {n} tidak terdaftar")
+    valid = reg.get("status") == "diterima"
+    return {"valid": valid, "reason": "" if valid else "KTA tidak aktif (pendaftaran tidak disetujui)",
+            "registration": {k: reg.get(k) for k in ATTENDANCE_REG_FIELDS if k != "user_id"} | {"status": reg.get("status")},
+            "_user_id": reg.get("user_id")}
+
+
+def _is_kehadiran(c: dict) -> bool:
+    return c.get("kind") == "aksi" and "kehadiran" in (c.get("target_actions") or [])
+
+
+@api.get("/admin/kta/{number}")
+async def admin_check_kta(number: str, user=Depends(require("admin"))):
+    out = await _kta_lookup(number)
+    out.pop("_user_id", None)
+    return out
+
+
+@api.get("/admin/attendance/events")
+async def admin_attendance_events(user=Depends(require("admin"))):
+    """Acara yang bisa dicatat kehadirannya: campaign gerakan bertarget "Kehadiran Acara" yang belum ditutup."""
+    docs = await db.campaigns.find({"kind": "aksi", "target_actions": "kehadiran", "status": {"$ne": "closed"},
+                                    "deleted": {"$ne": True}},
+                                   {"_id": 0, "campaign_id": 1, "title": 1, "category": 1, "status": 1, "deadline": 1,
+                                    "attendance_count": 1}).sort("deadline", 1).to_list(200)
+    return [{**d, "attendance_count": d.get("attendance_count", 0)} for d in docs]
+
+
+class AttendanceIn(BaseModel):
+    kta_number: str = Field(..., min_length=4, max_length=60)
+
+
+async def _attendance_campaign(cid: str) -> dict:
+    c = await db.campaigns.find_one({"campaign_id": cid, "deleted": {"$ne": True}}, {"_id": 0})
+    if not c:
+        raise HTTPException(404, "Acara tidak ditemukan")
+    if not _is_kehadiran(c):
+        raise HTTPException(400, "Campaign ini tidak bertarget Kehadiran Acara")
+    return c
+
+
+@api.post("/admin/campaigns/{cid}/attendance")
+async def admin_record_attendance(cid: str, body: AttendanceIn, user=Depends(require("admin"))):
+    c = await _attendance_campaign(cid)
+    if c.get("status") != "active":
+        raise HTTPException(400, "Acara sedang dijeda atau sudah ditutup")
+    info = await _kta_lookup(body.kta_number)
+    reg = info["registration"]
+    if not info["valid"]:
+        raise HTTPException(400, f"{info['reason']}: {reg['kta_number']} a.n. {reg['nama']}")
+    prev = await db.attendance.find_one({"campaign_id": cid, "registration_id": reg["registration_id"]}, {"_id": 0})
+    if prev:
+        return {"already": True, "attendance": prev, "registration": reg}
+    doc = {"attendance_id": gen_id("att"), "campaign_id": cid, "campaign_title": c["title"], "user_id": info["_user_id"],
+           **{k: reg.get(k) for k in ("registration_id", "kta_number", "nama", "jenis", "kabupaten", "provinsi")},
+           "scanned_by": user["user_id"], "scanned_by_name": user.get("name", ""), "created_at": iso()}
+    try:
+        await db.attendance.insert_one(dict(doc))
+    except DuplicateKeyError:  # dua petugas memindai KTA yang sama bersamaan
+        prev = await db.attendance.find_one({"campaign_id": cid, "registration_id": reg["registration_id"]}, {"_id": 0})
+        return {"already": True, "attendance": prev, "registration": reg}
+    await db.campaigns.update_one({"campaign_id": cid}, {"$inc": {"attendance_count": 1}})
+    if info["_user_id"]:
+        await notify(info["_user_id"], c["title"], "Kehadiranmu tercatat. Terima kasih sudah hadir!", "success")
+    return {"already": False, "attendance": doc, "registration": reg}
+
+
+@api.get("/admin/campaigns/{cid}/attendance")
+async def admin_list_attendance(cid: str, user=Depends(require("admin"))):
+    c = await _attendance_campaign(cid)
+    items = await db.attendance.find({"campaign_id": cid}, {"_id": 0}).sort("created_at", -1).to_list(5000)
+    return {"campaign_id": cid, "title": c["title"], "total": len(items), "items": items}
+
+
+@api.delete("/admin/campaigns/{cid}/attendance/{aid}")
+async def admin_delete_attendance(cid: str, aid: str, user=Depends(require("admin"))):
+    """Batalkan kehadiran yang salah catat."""
+    d = await db.attendance.find_one_and_delete({"campaign_id": cid, "attendance_id": aid})
+    if not d:
+        raise HTTPException(404, "Data kehadiran tidak ditemukan")
+    await db.campaigns.update_one({"campaign_id": cid, "attendance_count": {"$gt": 0}}, {"$inc": {"attendance_count": -1}})
+    await audit_if_owner(user, "attendance.delete", d.get("campaign_title", ""), {"kta_number": d.get("kta_number")})
+    return {"ok": True}
+
+
+@api.get("/attendance/me")
+async def my_attendance(user=Depends(get_user)):
+    return await db.attendance.find({"user_id": user["user_id"]},
+                                    {"_id": 0, "attendance_id": 1, "campaign_id": 1, "campaign_title": 1, "kta_number": 1,
+                                     "created_at": 1}).sort("created_at", -1).to_list(200)
+
+
 def _rename_text(v):
     return v.replace("#" + OLD_GERAKAN_NAME, "#GibranFor2029").replace(OLD_GERAKAN_NAME, GERAKAN_NAME)
 
@@ -2427,6 +2538,9 @@ async def startup():
                                         partialFilterExpression={"nik": {"$type": "string"}})
     await db.registrations.create_index([("status", 1), ("created_at", -1)])
     await db.registrations.create_index("kta_number", unique=True, sparse=True)
+    await db.attendance.create_index("attendance_id", unique=True)
+    await db.attendance.create_index([("campaign_id", 1), ("registration_id", 1)], unique=True)
+    await db.attendance.create_index([("user_id", 1), ("created_at", -1)])
     await _maybe_migrate_legacy_db()
     await rename_old_gerakan_name()
     if RECONCILE_SECONDS > 0 and komerce_configured():
