@@ -102,6 +102,8 @@ PLATFORM_DOMAINS = {
 }
 CATEGORIES = ["Produk", "Beauty", "Lifestyle", "F&B", "Edukasi", "Hiburan", "Fashion", "Tech"]  # campaign brand lama
 # Campaign gerakan Gibran for 2029 (dibuat Admin Pusat): tanpa brand, rate, budget, dan minimal views.
+GERAKAN_NAME = "Gibran for 2029"
+OLD_GERAKAN_NAME = "GIBRAN2029"
 GERAKAN_CATEGORIES = ["Agenda", "Sebar Narasi", "Aksi Sosial", "Penggalangan Dukungan"]
 TARGET_AKSI = {"share": "Share", "forward": "Forward", "komentar": "Komentar", "kehadiran": "Kehadiran Acara"}
 Platform = Literal["tiktok", "instagram", "threads", "youtube", "facebook"]
@@ -1851,7 +1853,7 @@ async def owner_create_campaign(body: OwnerCampaignIn, owner=Depends(require_own
     d = body.model_dump()
     days = d.pop("deadline_days")
     d["target_actions"] = list(dict.fromkeys(d["target_actions"]))
-    c = {**d, "campaign_id": gen_id("cmp"), "kind": "aksi", "brand_id": "gibran2029", "brand_name": "Gibran for 2029",
+    c = {**d, "campaign_id": gen_id("cmp"), "kind": "aksi", "brand_id": "gibran2029", "brand_name": GERAKAN_NAME,
          # Tidak ada sistem bayar per views: field lama diisi 0 agar aplikasi versi lama tetap bisa membaca campaign.
          "rate_per_1k": 0, "min_views": 0, "budget": 0, "spent": 0,
          "submission_count": 0, "total_views": 0, "status": "active", "funded_by": "owner",
@@ -2365,6 +2367,26 @@ async def _maybe_migrate_legacy_db():
         logger.exception("Migrasi dari %s gagal", source)
 
 
+def _rename_text(v):
+    return v.replace("#" + OLD_GERAKAN_NAME, "#GibranFor2029").replace(OLD_GERAKAN_NAME, GERAKAN_NAME)
+
+
+async def rename_old_gerakan_name() -> int:
+    """Sekali jalan (idempoten): campaign lama bertuliskan "GIBRAN2029" diganti menjadi "Gibran for 2029"
+    (nama penyelenggara, judul, instruksi; hashtag menjadi #GibranFor2029), termasuk judul di setoran."""
+    fields = ("brand_name", "title", "instructions")
+    changed = 0
+    async for c in db.campaigns.find({"$or": [{f: {"$regex": OLD_GERAKAN_NAME}} for f in fields]}, {"_id": 0}):
+        upd = {f: _rename_text(c[f]) for f in fields if isinstance(c.get(f), str) and OLD_GERAKAN_NAME in c[f]}
+        await db.campaigns.update_one({"campaign_id": c["campaign_id"]}, {"$set": upd})
+        if "title" in upd:
+            await db.submissions.update_many({"campaign_id": c["campaign_id"]}, {"$set": {"campaign_title": upd["title"]}})
+        changed += 1
+    if changed:
+        logger.info("Nama gerakan diperbarui ke '%s' pada %d campaign lama", GERAKAN_NAME, changed)
+    return changed
+
+
 @app.on_event("startup")
 async def startup():
     if DB_NAME.lower() in LEGACY_DB_NAMES:
@@ -2406,6 +2428,7 @@ async def startup():
     await db.registrations.create_index([("status", 1), ("created_at", -1)])
     await db.registrations.create_index("kta_number", unique=True, sparse=True)
     await _maybe_migrate_legacy_db()
+    await rename_old_gerakan_name()
     if RECONCILE_SECONDS > 0 and komerce_configured():
         app.state.reconciler = asyncio.create_task(_reconcile_loop())
         logger.info("Komerce configured (%s); reconciling pending top-ups every %ss",

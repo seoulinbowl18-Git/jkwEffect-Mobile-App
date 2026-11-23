@@ -234,3 +234,16 @@ def test_link_facebook_valid():
     assert server.valid_url("https://www.facebook.com/share/v/abc", "facebook")
     assert server.valid_url("https://fb.watch/xyz", "facebook")
     assert not server.valid_url("https://tiktok.com/@a/video/1", "facebook")
+
+
+def test_campaign_lama_gibran2029_diganti_nama_baru(c):
+    cid = create(c)["campaign_id"]
+    c.portal.call(server.db.campaigns.update_one, {"campaign_id": cid}, {"$set": {
+        "brand_name": "GIBRAN2029", "title": "Aksi GIBRAN2029", "instructions": "Pakai hashtag #GIBRAN2029 ya."}})
+    c.portal.call(server.db.submissions.insert_one, {"submission_id": "sub_r", "campaign_id": cid, "campaign_title": "Aksi GIBRAN2029"})
+    assert c.portal.call(server.rename_old_gerakan_name) == 1
+    cmp = c.get(f"/api/campaigns/{cid}").json()
+    assert (cmp["brand_name"], cmp["title"]) == ("Gibran for 2029", "Aksi Gibran for 2029")
+    assert cmp["instructions"] == "Pakai hashtag #GibranFor2029 ya."
+    assert c.portal.call(server.db.submissions.find_one, {"submission_id": "sub_r"})["campaign_title"] == "Aksi Gibran for 2029"
+    assert c.portal.call(server.rename_old_gerakan_name) == 0  # idempoten
