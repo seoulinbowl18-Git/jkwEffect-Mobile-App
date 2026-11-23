@@ -1,4 +1,4 @@
-# Pemisahan database GIBRAN2029 dari data OurBuzzer lama: konfigurasi koneksi & skrip migrasi.
+# Pemisahan database Gibran for 2029 dari data OurBuzzer lama: konfigurasi koneksi & skrip migrasi.
 #   pytest tests/test_db_config.py -n 0
 import os
 import sys

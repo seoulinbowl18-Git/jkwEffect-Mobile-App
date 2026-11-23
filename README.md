@@ -1,4 +1,4 @@
-# GIBRAN2029 — Aplikasi Mobile & Backend
+# Gibran for 2029 — Aplikasi Mobile & Backend
 
 *Bergerak Bersama, Menuju Indonesia Maju 2029.*
 
@@ -6,14 +6,14 @@
 - `backend/` — API FastAPI (MongoDB) yang dipakai aplikasi dan web; di-deploy ke Railway (Root Directory: `/backend`).
 - Web (pendaftaran Member/Relawan, KTA digital, panel admin) ada di repo `jkwEffect-Web`.
 
-## Database terpisah (GIBRAN2029)
+## Database terpisah (Gibran for 2029)
 Semua koleksi (`users`, `registrations`, `counters` untuk nomor KTA, `notifications`, `uploads`, dst.) disimpan di
 database **`gibran2029_db`**, terpisah dari database lama OurBuzzer. Backend membaca:
 `MONGODB_URI` (atau `MONGO_URL`) dan `DB_NAME` (default `gibran2029_db`). Log startup menulis database yang dipakai,
 dan memberi peringatan bila masih memakai `ourbuzzer`/`trybuzzer`.
 
 ### Pindah database di Railway (sekali saja)
-1. **Salin data GIBRAN2029** (pendaftaran, foto KTP, urutan KTA, akun pendaftar & admin) dari database lama:
+1. **Salin data Gibran for 2029** (pendaftaran, foto KTP, urutan KTA, akun pendaftar & admin) dari database lama:
    ```bash
    cd backend
    MONGODB_URI="<connection string>" python scripts/migrate_to_gibran2029.py --source-db <DB_NAME lama>          # cek dulu (dry run)

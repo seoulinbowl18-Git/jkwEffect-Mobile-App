@@ -53,7 +53,7 @@ void main() {
     final uri = AppConfig.whatsappUriFor('0812-3456 7890')!;
     expect(uri.host, 'wa.me');
     expect(uri.path, '/6281234567890');
-    expect(uri.queryParameters['text'], startsWith('Halo Admin GIBRAN2029, saya dari brand'));
+    expect(uri.queryParameters['text'], startsWith('Halo Admin Gibran for 2029, saya dari brand'));
     expect(AppConfig.whatsappUriFor('+62 812 3456 7890')!.path, '/6281234567890');
     expect(AppConfig.whatsappUriFor(''), isNull);
   });
@@ -76,7 +76,7 @@ void main() {
     await tester.tap(find.byKey(const Key('login-mode-member')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Jadi Member Resmi\nGIBRAN2029.'), findsOneWidget);
+    expect(find.text('Jadi Member Resmi\nGibran for 2029.'), findsOneWidget);
     expect(find.text('KTA digital resmi bernomor unik'), findsOneWidget);
     expect(find.byKey(const Key('login-community-button')), findsOneWidget);
     expect(find.text('Hubungi Kami'), findsNothing);

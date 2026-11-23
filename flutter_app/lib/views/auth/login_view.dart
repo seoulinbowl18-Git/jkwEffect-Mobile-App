@@ -36,10 +36,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
     }
   }
 
-  /// "Gabung Komunitas" → grup Telegram GIBRAN2029 (link dari backend).
+  /// "Gabung Komunitas" → grup Telegram Gibran for 2029 (link dari backend).
   Future<void> _joinCommunity() async {
     final url = (await ref.read(communityProvider.future).catchError((_) => const CommunityLinks())).telegramUrl;
-    if (mounted) await _open(url.isEmpty ? null : Uri.parse(url), 'Link grup Telegram GIBRAN2029 segera tersedia');
+    if (mounted) await _open(url.isEmpty ? null : Uri.parse(url), 'Link grup Telegram Gibran for 2029 segera tersedia');
   }
 
   Future<void> _google() async {
@@ -71,14 +71,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
       child: narrow(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const BrandLogo(size: 38, showName: true, onDark: true),
         const SizedBox(height: AppSpace.xxl),
-        Text(_memberMode ? 'Jadi Member Resmi\nGIBRAN2029.' : 'Satukan Barisan,\nKawal Masa Depan.',
+        Text(_memberMode ? 'Jadi Member Resmi\nGibran for 2029.' : 'Satukan Barisan,\nKawal Masa Depan.',
             key: const Key('login-hero-title'), style: t.headlineLarge?.copyWith(color: cs.onPrimary, height: 1.15)),
         const SizedBox(height: AppSpace.m),
         Text(
           _memberMode
               ? 'Daftar sebagai member resmi dan dapatkan KTA digital bernomor unik. '
                   'Bergerak Bersama, Menuju Indonesia Maju 2029.'
-              : 'Bergabunglah dalam barisan relawan dan member resmi GIBRAN2029. '
+              : 'Bergabunglah dalam barisan relawan dan member resmi Gibran for 2029. '
                   'Satu langkah nyata untuk gerakan perubahan Indonesia.',
           style: t.bodyLarge?.copyWith(color: AppTheme.onBrandAlpha(0.9)),
         ),
@@ -138,7 +138,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
         Text('Belum punya akun? Akun dibuat otomatis saat pertama kali masuk.',
             textAlign: TextAlign.center, style: t.bodySmall),
         const SizedBox(height: AppSpace.l),
-        Text('Dengan masuk, kamu menyetujui Syarat & Ketentuan GIBRAN2029.',
+        Text('Dengan masuk, kamu menyetujui Syarat & Ketentuan Gibran for 2029.',
             textAlign: TextAlign.center, style: t.bodySmall?.copyWith(color: cs.outline)),
         // Pintu masuk khusus Owner (OTP WhatsApp); sengaja dibuat tidak menonjol.
         TextButton(

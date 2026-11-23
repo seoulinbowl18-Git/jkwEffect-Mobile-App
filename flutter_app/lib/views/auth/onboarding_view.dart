@@ -10,7 +10,7 @@ import '../../widgets/loading_button.dart';
 
 /// Halaman setelah login untuk akun yang belum punya peran kreator/brand (member & relawan baru).
 /// Tidak ada lagi pilihan Kreator/Brand: pengguna langsung diarahkan ke formulir pendaftaran
-/// Relawan / Member atau halaman KTA digital di web GIBRAN2029.
+/// Relawan / Member atau halaman KTA digital di web Gibran for 2029.
 class OnboardingView extends ConsumerWidget {
   const OnboardingView({super.key});
 
@@ -33,7 +33,7 @@ class OnboardingView extends ConsumerWidget {
             Text('Halo, ${user?.firstName ?? ''}!',
                 style: t.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 8),
-            Text('Ayo bergabung dengan GIBRAN2029. Pilih peranmu: daftar sebagai relawan atau member resmi.',
+            Text('Ayo bergabung dengan Gibran for 2029. Pilih peranmu: daftar sebagai relawan atau member resmi.',
                 style: t.bodyLarge?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: 24),
             _JoinOption(

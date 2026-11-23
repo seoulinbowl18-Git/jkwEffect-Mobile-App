@@ -91,7 +91,7 @@ def test_owner_only_endpoints_reject_moderators_and_others(c):
 # ---------------- campaigns ----------------
 def test_create_aksi_tanpa_brand_rate_budget(c):
     cmp = create(c, rate_per_1k=5000, budget=1_000_000, brand_id="brand")  # field komersial lama diabaikan
-    assert cmp["kind"] == "aksi" and cmp["brand_name"] == "GIBRAN2029" and cmp["funded_by"] == "owner"
+    assert cmp["kind"] == "aksi" and cmp["brand_name"] == "Gibran for 2029" and cmp["funded_by"] == "owner"
     assert cmp["rate_per_1k"] == 0 and cmp["budget"] == 0 and cmp["min_views"] == 0 and cmp["budget_left_pct"] == 0
     assert cmp["target_actions"] == ["share", "komentar"] and cmp["platforms"] == ["tiktok", "facebook"]
     assert me(c, B)["brand_balance"] == 3_000_000  # saldo brand tidak tersentuh

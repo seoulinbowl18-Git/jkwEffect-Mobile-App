@@ -1,4 +1,4 @@
-# GIBRAN2029 — Design System
+# Gibran for 2029 — Design System
 
 Gaya: **Premium Red — modern, elegant & professional.** Header gradasi merah → pink bersudut
 bawah melengkung dengan ornamen gelombang, kartu putih bersudut besar berbayangan lembut di atas

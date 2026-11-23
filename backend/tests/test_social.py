@@ -151,7 +151,7 @@ def test_telegram_link_flow(env, monkeypatch):
     # The same Telegram account cannot be linked to a second user.
     code_b = c.post("/api/users/social/telegram/link", headers=B).json()["url"].split("=", 1)[1]
     c.post("/api/telegram/webhook", json={**upd, "message": {**upd["message"], "text": f"/start {code_b}"}}, headers=secret)
-    assert "akun GIBRAN2029 lain" in tg.sent[-1][1]["text"]
+    assert "akun Gibran for 2029 lain" in tg.sent[-1][1]["text"]
     assert c.get("/api/users/social", headers=B).json()["telegram"] is None
     # Unlink.
     assert c.delete("/api/users/social/telegram", headers=A).json()["telegram"] is None

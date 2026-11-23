@@ -17,7 +17,7 @@ class OurBuzzerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GIBRAN2029',
+      title: 'Gibran for 2029',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

@@ -1,4 +1,4 @@
-"""Salin data GIBRAN2029 dari database lama (OurBuzzer) ke database baru yang terpisah.
+"""Salin data Gibran for 2029 dari database lama (OurBuzzer) ke database baru yang terpisah.
 
 Yang disalin (upsert, aman dijalankan berulang; database lama TIDAK diubah/dihapus):
   - registrations   : semua pendaftaran Member & Relawan (termasuk nomor KTA)

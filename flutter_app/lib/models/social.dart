@@ -49,7 +49,7 @@ class SocialAccounts {
       );
 }
 
-/// Respons `GET /public/community`: link grup & bot Telegram GIBRAN2029.
+/// Respons `GET /public/community`: link grup & bot Telegram Gibran for 2029.
 class CommunityLinks {
   const CommunityLinks({this.telegramUrl = '', this.telegramBot = '', this.connectEnabled = false});
   final String telegramUrl;

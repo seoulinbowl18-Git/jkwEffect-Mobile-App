@@ -28,7 +28,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # ---------------- Database ----------------
-# GIBRAN2029 memakai database MongoDB sendiri, terpisah dari data OurBuzzer lama.
+# Gibran for 2029 memakai database MongoDB sendiri, terpisah dari data OurBuzzer lama.
 # URI: MONGODB_URI (disarankan) atau MONGO_URL (nama lama, tetap didukung).
 # Nama database: DB_NAME; bila kosong diambil dari path URI (…mongodb.net/<nama>?…), lalu default "gibran2029_db".
 DEFAULT_DB_NAME = "gibran2029_db"
@@ -101,7 +101,7 @@ PLATFORM_DOMAINS = {
     "facebook": ["facebook.com", "fb.com", "fb.watch"],
 }
 CATEGORIES = ["Produk", "Beauty", "Lifestyle", "F&B", "Edukasi", "Hiburan", "Fashion", "Tech"]  # campaign brand lama
-# Campaign gerakan GIBRAN2029 (dibuat Admin Pusat): tanpa brand, rate, budget, dan minimal views.
+# Campaign gerakan Gibran for 2029 (dibuat Admin Pusat): tanpa brand, rate, budget, dan minimal views.
 GERAKAN_CATEGORIES = ["Agenda", "Sebar Narasi", "Aksi Sosial", "Penggalangan Dukungan"]
 TARGET_AKSI = {"share": "Share", "forward": "Forward", "komentar": "Komentar", "kehadiran": "Kehadiran Acara"}
 Platform = Literal["tiktok", "instagram", "threads", "youtube", "facebook"]
@@ -149,7 +149,7 @@ async def get_user(request: Request):
 
 def suspended_message(user):
     reason = (user.get("suspend_reason") or "").strip()
-    return "Akun kamu ditangguhkan" + (f": {reason}" if reason else ". Hubungi admin GIBRAN2029.")
+    return "Akun kamu ditangguhkan" + (f": {reason}" if reason else ". Hubungi admin Gibran for 2029.")
 
 
 async def require_owner(user=Depends(get_user)):
@@ -504,7 +504,7 @@ async def admin_request_otp(body: OtpRequestIn, request: Request):
 
     code = f"{secrets.randbelow(1_000_000):06d}"
     await send_whatsapp(phone, (
-        f"*GIBRAN2029 Admin Pusat*\n\nKode OTP login kamu: *{code}*\n"
+        f"*Gibran for 2029 Admin Pusat*\n\nKode OTP login kamu: *{code}*\n"
         f"Berlaku {OTP_TTL_MINUTES} menit. Jangan berikan kode ini kepada siapa pun."))
     await db.admin_otps.update_one({"phone": phone}, {"$set": {
         "phone": phone, "code_hash": _otp_hash(phone, code), "expires_at": t + timedelta(minutes=OTP_TTL_MINUTES),
@@ -737,7 +737,7 @@ async def public_community():
 
 @api.post("/users/social/telegram/link")
 async def telegram_link_start(user=Depends(get_user)):
-    """One-time deep link to the GIBRAN2029 bot. Opening it (t.me/<bot>?start=<code>) links the
+    """One-time deep link to the Gibran for 2029 bot. Opening it (t.me/<bot>?start=<code>) links the
     Telegram account to this user and the bot replies with the community group invite."""
     cfg = telegram_config()
     if not (cfg["token"] and cfg["bot"]):
@@ -778,26 +778,26 @@ async def telegram_webhook(request: Request):
     group = ("Masuk grup komunitas", cfg["group"]) if cfg["group"] else None
     code = text.split(maxsplit=1)[1].strip() if " " in text else ""
     if not code:
-        await telegram_send(chat_id, "Halo! Ini bot resmi <b>GIBRAN2029</b>. Hubungkan akunmu dari halaman Profil "
-                                     "di web atau aplikasi GIBRAN2029.", group)
+        await telegram_send(chat_id, "Halo! Ini bot resmi <b>Gibran for 2029</b>. Hubungkan akunmu dari halaman Profil "
+                                     "di web atau aplikasi Gibran for 2029.", group)
         return {"ok": True}
     link = await db.telegram_links.find_one_and_delete({"code": code})
     if not link or _as_utc(link["expires_at"]) < now():
         await telegram_send(chat_id, "Link sudah kedaluwarsa atau sudah dipakai. Klik lagi <b>Hubungkan Telegram</b> "
-                                     "di halaman Profil GIBRAN2029.")
+                                     "di halaman Profil Gibran for 2029.")
         return {"ok": True}
     tg_id = sender.get("id")
     other = await db.users.find_one({"social.telegram.id": tg_id, "user_id": {"$ne": link["user_id"]}}, {"_id": 0, "user_id": 1})
     if other:
-        await telegram_send(chat_id, "Akun Telegram ini sudah terhubung ke akun GIBRAN2029 lain.")
+        await telegram_send(chat_id, "Akun Telegram ini sudah terhubung ke akun Gibran for 2029 lain.")
         return {"ok": True}
     name = " ".join(x for x in (sender.get("first_name"), sender.get("last_name")) if x)
     await db.users.update_one({"user_id": link["user_id"]}, {"$set": {"social.telegram": {
         "id": tg_id, "username": sender.get("username") or "", "name": name, "linked_at": iso()}}})
     await bump_sync()
     await notify(link["user_id"], "Telegram terhubung", f"Akun Telegram {('@' + sender['username']) if sender.get('username') else name} "
-                                                        "sudah terhubung ke GIBRAN2029.", "success")
-    await telegram_send(chat_id, "✅ Akun Telegram kamu sudah terhubung ke <b>GIBRAN2029</b>."
+                                                        "sudah terhubung ke Gibran for 2029.", "success")
+    await telegram_send(chat_id, "✅ Akun Telegram kamu sudah terhubung ke <b>Gibran for 2029</b>."
                                  + ("\nKetuk tombol di bawah untuk masuk ke grup komunitas kreator." if group else ""), group)
     return {"ok": True}
 
@@ -1160,7 +1160,7 @@ async def create_submission(body: SubmissionIn, user=Depends(require("creator"))
     today = datetime.now(WIB).date().isoformat()
     await db.users.update_one({"user_id": user["user_id"]}, {"$addToSet": {"post_dates": today}})
     await notify_owners("Submission baru", f"{user['name']} submit video ke {c['title']}")
-    await notify(user["user_id"], c["title"], "Video terkirim dan sedang direview Admin GIBRAN2029.")
+    await notify(user["user_id"], c["title"], "Video terkirim dan sedang direview Admin Gibran for 2029.")
     s.pop("_id", None)
     return s
 
@@ -1193,7 +1193,7 @@ async def claim_views(sid: str, body: ClaimIn, user=Depends(require("creator")))
     """Klaim tanpa bukti sudah tidak diterima: kreator wajib melampirkan rekaman layar/screenshot
     analitik lewat POST /submissions/{sid}/claim-proof (aplikasi versi lama mendapat pesan ini)."""
     raise HTTPException(400, "Klaim sekarang wajib melampirkan bukti rekaman layar/screenshot analitik. "
-                             "Perbarui aplikasi GIBRAN2029 lalu klaim lewat tombol Klaim.")
+                             "Perbarui aplikasi Gibran for 2029 lalu klaim lewat tombol Klaim.")
 
 
 # ---------------- Bukti klaim (screenshot / rekaman layar analitik) ----------------
@@ -1285,7 +1285,7 @@ async def claim_with_proof(sid: str, views: int = Form(...), note: str = Form(""
     await notify_owners("Klaim views baru",
                         f"{user['name']} klaim {views:,} views + {len(proofs)} bukti analitik".replace(",", "."))
     await notify(user["user_id"], s["campaign_title"],
-                 "Klaim & bukti diterima. Views sedang dicek Admin GIBRAN2029.")
+                 "Klaim & bukti diterima. Views sedang dicek Admin Gibran for 2029.")
     return {"ok": True, "proofs": with_proof_urls([{"proofs": proofs}])[0]["proofs"]}
 
 
@@ -1410,7 +1410,7 @@ async def verify_views(sid: str, body: VerifyIn, user=Depends(require_owner)):
 async def brand_submissions(user=Depends(require("brand"))):
     """Brand tidak lagi melihat/menangani submission kreator; cukup ringkasan di /brand/stats
     dan /brand/campaigns. Endpoint dipertahankan agar aplikasi lama mendapat pesan yang jelas."""
-    raise HTTPException(403, "Review konten kreator kini dikelola Admin Pusat GIBRAN2029. "
+    raise HTTPException(403, "Review konten kreator kini dikelola Admin Pusat Gibran for 2029. "
                              "Lihat ringkasan campaign di dashboard brand.")
 
 
@@ -1851,7 +1851,7 @@ async def owner_create_campaign(body: OwnerCampaignIn, owner=Depends(require_own
     d = body.model_dump()
     days = d.pop("deadline_days")
     d["target_actions"] = list(dict.fromkeys(d["target_actions"]))
-    c = {**d, "campaign_id": gen_id("cmp"), "kind": "aksi", "brand_id": "gibran2029", "brand_name": "GIBRAN2029",
+    c = {**d, "campaign_id": gen_id("cmp"), "kind": "aksi", "brand_id": "gibran2029", "brand_name": "Gibran for 2029",
          # Tidak ada sistem bayar per views: field lama diisi 0 agar aplikasi versi lama tetap bisa membaca campaign.
          "rate_per_1k": 0, "min_views": 0, "budget": 0, "spent": 0,
          "submission_count": 0, "total_views": 0, "status": "active", "funded_by": "owner",
@@ -1967,7 +1967,7 @@ async def owner_update_user(uid: str, body: OwnerUserPatch, owner=Depends(requir
     elif body.status == "active":
         await notify(uid, "Akun aktif kembali", "Akun kamu sudah diaktifkan kembali oleh Owner.", "success")
     if body.verified:
-        await notify(uid, "Akun terverifikasi", "Akun kamu sudah diverifikasi oleh GIBRAN2029.", "success")
+        await notify(uid, "Akun terverifikasi", "Akun kamu sudah diverifikasi oleh Gibran for 2029.", "success")
     await audit(owner, "user.edit", target.get("profile", {}).get("brand_name") or target["name"], {"user_id": uid, **detail})
     return await db.users.find_one({"user_id": uid}, {"_id": 0, "post_dates": 0, "password_hash": 0})
 
@@ -2083,7 +2083,7 @@ async def get_upload(uid: str):
                              "X-Content-Type-Options": "nosniff"})
 
 
-# ---------------- Pendaftaran Member (jenis "anggota") / Relawan GIBRAN2029 ----------------
+# ---------------- Pendaftaran Member (jenis "anggota") / Relawan Gibran for 2029 ----------------
 # Formulir web /daftar/{anggota|relawan}. Wajib login Google (sesi biasa, tanpa peran kreator/brand).
 # NIK & foto KTP data pribadi: foto disimpan di db.uploads (kind "ktp") dan TIDAK lewat /api/uploads/{id};
 # hanya admin yang bisa melihatnya lewat /api/admin/registrations/{id}/ktp.
@@ -2343,7 +2343,7 @@ SEED_INSTR = ("1. Buat video 15-60 detik yang menampilkan produk secara natural.
 
 
 async def _maybe_migrate_legacy_db():
-    """Migrasi sekali jalan di server: salin data GIBRAN2029 dari database lama ke DB_NAME.
+    """Migrasi sekali jalan di server: salin data Gibran for 2029 dari database lama ke DB_NAME.
     Aktif hanya bila MIGRATE_FROM_DB diisi (mis. ourbuzzer). Tanpa MIGRATE_APPLY=true hanya dry run.
     Hapus kedua variabel setelah selesai. Kegagalan migrasi tidak menghentikan server."""
     source = (os.environ.get("MIGRATE_FROM_DB") or "").strip()
@@ -2368,7 +2368,7 @@ async def _maybe_migrate_legacy_db():
 @app.on_event("startup")
 async def startup():
     if DB_NAME.lower() in LEGACY_DB_NAMES:
-        logger.warning("Database '%s' adalah database lama OurBuzzer. Set DB_NAME=%s agar data GIBRAN2029 terpisah.",
+        logger.warning("Database '%s' adalah database lama OurBuzzer. Set DB_NAME=%s agar data Gibran for 2029 terpisah.",
                        DB_NAME, DEFAULT_DB_NAME)
     else:
         logger.info("Database MongoDB: %s", DB_NAME)

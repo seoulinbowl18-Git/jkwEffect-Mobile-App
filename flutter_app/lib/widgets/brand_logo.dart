@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logo GIBRAN2029: huruf "P" dengan tombol putar di lengkungnya (kreator video).
+/// Logo Gibran for 2029: huruf "P" dengan tombol putar di lengkungnya (kreator video).
 /// [onDark] = versi putih di atas header gradasi merah.
 class BrandLogo extends StatelessWidget {
   const BrandLogo({super.key, this.size = 40, this.showName = false, this.onDark = false});
@@ -17,6 +17,15 @@ class BrandLogo extends StatelessWidget {
       child: CustomPaint(painter: _MarkPainter(color)),
     );
     if (!showName) return mark;
+    // Nama "Gibran for 2029" lebih panjang: mengecil otomatis bila ruang sempit (tanpa luapan).
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: _named(cs, mark),
+    );
+  }
+
+  Widget _named(ColorScheme cs, Widget mark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -27,7 +36,7 @@ class BrandLogo extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'GIBRAN2029',
+              'Gibran for 2029',
               style: TextStyle(
                 color: onDark ? cs.onPrimary : null,
                 fontWeight: FontWeight.w800,

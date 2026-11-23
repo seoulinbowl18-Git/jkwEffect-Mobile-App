@@ -13,7 +13,7 @@ import 'form_helpers.dart';
 import 'premium.dart';
 
 /// Section "Akun Sosial Media" di Profil kreator: TikTok / Instagram / Threads
-/// (+ Tambah, Ubah, Putuskan) dan "Hubungkan Telegram" untuk komunitas GIBRAN2029.
+/// (+ Tambah, Ubah, Putuskan) dan "Hubungkan Telegram" untuk komunitas Gibran for 2029.
 ///
 /// Hubungkan Telegram membuka bot resmi lewat deep link sekali pakai
 /// (`https://t.me/<bot>?start=<kode>`) di aplikasi Telegram. Saat pengguna kembali
@@ -84,7 +84,7 @@ class _SocialAccountsCardState extends ConsumerState<SocialAccountsCard> with Wi
 
   Future<void> _unlink(String wire, String label) async {
     final ok = await confirmDialog(context,
-        title: 'Putuskan $label?', message: 'Akun $label tidak lagi terhubung ke GIBRAN2029.', confirmLabel: 'Putuskan', destructive: true);
+        title: 'Putuskan $label?', message: 'Akun $label tidak lagi terhubung ke Gibran for 2029.', confirmLabel: 'Putuskan', destructive: true);
     if (!ok || !mounted) return;
     await _run(wire, () async {
       await ref.read(apiServiceProvider).unlinkSocial(wire);
@@ -98,7 +98,7 @@ class _SocialAccountsCardState extends ConsumerState<SocialAccountsCard> with Wi
         _waitingTelegram = true;
         final opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         if (!opened) throw Exception('Tidak bisa membuka Telegram. Pasang aplikasi Telegram lalu coba lagi.');
-        if (mounted) showAppSnack(context, 'Ketuk START di bot GIBRAN2029, lalu kembali ke aplikasi ini.');
+        if (mounted) showAppSnack(context, 'Ketuk START di bot Gibran for 2029, lalu kembali ke aplikasi ini.');
       });
 
   Future<void> _openGroup(String url) async {
@@ -195,8 +195,8 @@ class _SocialAccountsCardState extends ConsumerState<SocialAccountsCard> with Wi
             padding: const EdgeInsets.fromLTRB(0, AppSpace.s, 0, AppSpace.s),
             child: Text(
               tg != null
-                  ? 'Info campaign baru dan pengumuman GIBRAN2029 dikirim lewat Telegram.'
-                  : 'Kamu otomatis diarahkan ke grup komunitas Telegram GIBRAN2029 lewat bot resmi kami.',
+                  ? 'Info campaign baru dan pengumuman Gibran for 2029 dikirim lewat Telegram.'
+                  : 'Kamu otomatis diarahkan ke grup komunitas Telegram Gibran for 2029 lewat bot resmi kami.',
               style: t.bodySmall,
             ),
           ),

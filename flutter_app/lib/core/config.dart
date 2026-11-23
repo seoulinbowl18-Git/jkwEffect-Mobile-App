@@ -8,7 +8,7 @@ class AppConfig {
   AppConfig._();
 
   /// Base URL backend FastAPI (tanpa `/api` di belakang).
-  /// Tanpa `--dart-define=BACKEND_URL`: build release memakai backend produksi GIBRAN2029,
+  /// Tanpa `--dart-define=BACKEND_URL`: build release memakai backend produksi Gibran for 2029,
   /// build debug memakai backend lokal dari emulator Android.
   static const String productionBackendUrl = 'https://jkweffect-mobile-app-production.up.railway.app';
   static const String _definedBackendUrl = String.fromEnvironment('BACKEND_URL');
@@ -19,7 +19,7 @@ class AppConfig {
   /// Semua endpoint backend berada di bawah prefix `/api`.
   static String get apiBase => '$backendUrl/api';
 
-  /// Alamat web GIBRAN2029 (formulir pendaftaran Member/Relawan & KTA digital).
+  /// Alamat web Gibran for 2029 (formulir pendaftaran Member/Relawan & KTA digital).
   /// Ganti lewat `--dart-define=WEB_URL=https://domain-anda`.
   static const String webUrl = String.fromEnvironment('WEB_URL', defaultValue: 'https://jkw-effect-web.vercel.app');
   static Uri webPage(String path) => Uri.parse('$webUrl$path');
@@ -43,8 +43,8 @@ class AppConfig {
   }
 
   static const String brandContactMessage =
-      'Halo Admin GIBRAN2029, saya dari brand ... dan ingin daftar & konsultasi untuk membuat campaign '
-      'di GIBRAN2029. Mohon info lebih lanjut, terima kasih!';
+      'Halo Admin Gibran for 2029, saya dari brand ... dan ingin daftar & konsultasi untuk membuat campaign '
+      'di Gibran for 2029. Mohon info lebih lanjut, terima kasih!';
 
   /// `https://wa.me/<nomor>?text=<pesan>`, atau `null` bila nomor belum diatur.
   static Uri? whatsappUri([String message = brandContactMessage]) => whatsappUriFor(contactWhatsapp, message);

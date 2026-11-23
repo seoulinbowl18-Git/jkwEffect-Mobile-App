@@ -143,7 +143,7 @@ class _SubmitVideoViewState extends ConsumerState<SubmitVideoView> {
                 child: Text(
                   '• Video harus publik dan sesuai brief campaign.\n'
                   '• Satu video hanya bisa didaftarkan sekali.\n'
-                  '• Setelah disetujui Admin GIBRAN2029, klaim views di tab Konten saat target tercapai.',
+                  '• Setelah disetujui Admin Gibran for 2029, klaim views di tab Konten saat target tercapai.',
                   style: t.bodySmall?.copyWith(height: 1.5),
                 ),
               ),
