@@ -175,13 +175,12 @@ def test_relawan_wajib_nama_telepon_kabupaten(env):
     assert env.post("/api/registrations", data={**RELAWAN, "persetujuan": "false"}, headers=H["warga_1"]).status_code == 422
 
 
-def test_relawan_ktp_opsional_tetap_divalidasi(env):
-    bad = env.post("/api/registrations", data=RELAWAN, files={"ktp": ("k.pdf", b"%PDF-1", "application/pdf")}, headers=H["warga_1"])
-    assert bad.status_code == 400
+def test_relawan_tanpa_ktp_file_ktp_diabaikan(env):
     ok = env.post("/api/registrations", data=RELAWAN, files={"ktp": ("k.jpg", JPG, "image/jpeg")}, headers=H["warga_1"])
     assert ok.status_code == 200
     saved = env.portal.call(server.db.registrations.find_one, {"user_id": "warga_1"})
-    assert saved.get("ktp_upload_id")
+    assert not saved.get("ktp_upload_id")
+    assert env.portal.call(server.db.uploads.count_documents, {"kind": "ktp"}) == 0
 
 
 def test_member_tetap_wajib_ktp_dan_data_lengkap(env):

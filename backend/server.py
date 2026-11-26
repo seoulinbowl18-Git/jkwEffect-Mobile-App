@@ -2202,17 +2202,17 @@ async def create_registration(
 
     upload_id = None
     ts = iso()
-    if ktp is not None and (ktp.filename or member):
+    # Relawan tidak mengunggah KTP sama sekali: file KTP yang ikut terkirim diabaikan dan tidak disimpan.
+    if member and ktp is not None:  # member: file KTP selalu divalidasi (file kosong ditolak)
         data = await ktp.read(KTP_MAX_BYTES + 1)
-        if member or data:
-            if len(data) > KTP_MAX_BYTES:
-                raise HTTPException(413, "Ukuran foto KTP maksimal 3 MB")
-            ctype = sniff_image(data)
-            if not ctype:
-                raise HTTPException(400, "Foto KTP harus JPG, PNG, atau WebP")
-            upload_id = gen_id("ktp")
-            await db.uploads.insert_one({"upload_id": upload_id, "owner_id": user["user_id"], "content_type": ctype,
-                                         "kind": "ktp", "size": len(data), "data": data, "created_at": ts})
+        if len(data) > KTP_MAX_BYTES:
+            raise HTTPException(413, "Ukuran foto KTP maksimal 3 MB")
+        ctype = sniff_image(data)
+        if not ctype:
+            raise HTTPException(400, "Foto KTP harus JPG, PNG, atau WebP")
+        upload_id = gen_id("ktp")
+        await db.uploads.insert_one({"upload_id": upload_id, "owner_id": user["user_id"], "content_type": ctype,
+                                     "kind": "ktp", "size": len(data), "data": data, "created_at": ts})
     rid = gen_id("reg")
     doc.update({"registration_id": rid, "user_id": user["user_id"], "account_email": user.get("email"),
                 "status": "menunggu verifikasi", "persetujuan_at": ts, "created_at": ts, "updated_at": ts})
